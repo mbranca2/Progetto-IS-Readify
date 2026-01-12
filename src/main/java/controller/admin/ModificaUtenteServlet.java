@@ -104,13 +104,14 @@ public class ModificaUtenteServlet extends HttpServlet {
             
         } catch (NumberFormatException e) {
             response.sendError(HttpServletResponse.SC_BAD_REQUEST, "ID utente non valido");
-        } catch (SQLException e) {
+        } /*catch (SQLException e) {
             if (e.getSQLState().equals("23000") && e.getMessage().contains("email")) {
                 request.setAttribute("errore", "L'email inserita è già in uso");
                 request.getRequestDispatcher("/jsp/admin/modifica-utente.jsp").forward(request, response);
             } else {
                 throw new ServletException("Errore durante l'aggiornamento dell'utente", e);
             }
-        }
+            DA RIVEDERE - DA RIVEDERE - DA RIVEDERE - DA RIVEDERE - DA RIVEDERE - DA RIVEDERE - DA RIVEDERE
+        }*/
     }
 }
