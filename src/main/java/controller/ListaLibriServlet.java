@@ -1,43 +1,55 @@
 package controller;
 
+import model.Libro;
+import service.LibroService;
+import service.impl.LibroServiceImpl;
+
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import model.Categoria;
-import model.Libro;
-import model.dao.CategoriaDAO;
-import model.dao.LibroDAO;
-
 import java.io.IOException;
 import java.util.List;
 
-@WebServlet("/libri")
+@WebServlet("/listalibri")
 public class ListaLibriServlet extends HttpServlet {
-    @Override
-    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        System.out.println("ListaLibriServlet: Inizio elaborazione richiesta");
-        LibroDAO libroDAO = new LibroDAO();
-        CategoriaDAO categoriaDAO = new CategoriaDAO();
-        
-        // Carico tutti i libri e categore
-        List<Libro> listaLibri = libroDAO.trovaTutti();
-        List<Categoria> categorie = categoriaDAO.trovaTutteCategorie();
-        
-        if (listaLibri == null) {
-            System.out.println("ListaLibriServlet: La lista dei libri è null");
-        } else {
-            System.out.println("ListaLibriServlet: Trovati " + listaLibri.size() + " libri");
-            for (Libro libro : listaLibri) {
-                System.out.println(" - " + libro.getTitolo() + " (ID: " + libro.getIdLibro() + ")");
+    private static final long serialVersionUID = 1L;
+
+    private final LibroService libroService;
+
+    public ListaLibriServlet() {
+        this.libroService = new LibroServiceImpl();
+    }
+
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+
+        String searchTerm = request.getParameter("search");
+        String categoriaId = request.getParameter("categoria");
+
+        List<Libro> libri;
+
+        if (searchTerm != null && !searchTerm.trim().isEmpty()) {
+            // Search by title or author
+            libri = libroService.findByTitolo(searchTerm);
+            if (libri.isEmpty()) {
+                libri = libroService.findByAutore(searchTerm);
             }
+        } else if (categoriaId != null && !categoriaId.trim().isEmpty()) {
+            // Filter by category
+            try {
+                int id = Integer.parseInt(categoriaId);
+                libri = libroService.findByCategoria(id);
+            } catch (NumberFormatException e) {
+                libri = libroService.findAll();
+            }
+        } else {
+            // Get all books
+            libri = libroService.findAll();
         }
-        
-        // Aggiungo le categorie alla richiesta
-        req.setAttribute("categorie", categorie);
-        req.setAttribute("libri", listaLibri);
-        req.getRequestDispatcher("/jsp/catalogo.jsp").forward(req, resp);
-        System.out.println("ListaLibriServlet: Reindirizzamento a /jsp/catalogo.jsp");
+
+        request.setAttribute("libri", libri);
+        request.getRequestDispatcher("/jsp/catalogo.jsp").forward(request, response);
     }
 }

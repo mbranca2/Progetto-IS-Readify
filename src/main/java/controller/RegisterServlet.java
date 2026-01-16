@@ -1,77 +1,46 @@
 package controller;
 
+import config.DependencyInjection;
+import dto.UtenteDTO;
+import service.UtenteService;
+import service.impl.UtenteServiceImpl;
+
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
-import jakarta.servlet.http.*;
-import model.Utente;
-import model.dao.UtenteDAO;
-import utils.HashUtil;
-import utils.ValidatoreForm;
-
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.Map;
 
-@WebServlet("/registrazione")
+@WebServlet("/register")
 public class RegisterServlet extends HttpServlet {
+    private static final long serialVersionUID = 1L;
+    private final UtenteService utenteService;
 
-    @Override
+    public RegisterServlet() {
+        this.utenteService = DependencyInjection.getUtenteService();
+    }
+
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        request.getRequestDispatcher("/jsp/register.jsp").forward(request, response);
+    }
+
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        UtenteDTO utenteDTO = new UtenteDTO();
+        utenteDTO.setEmail(request.getParameter("email"));
+        utenteDTO.setPassword(request.getParameter("password")); // In production, hash the password
+        utenteDTO.setNome(request.getParameter("nome"));
+        utenteDTO.setCognome(request.getParameter("cognome"));
 
-        String email = ValidatoreForm.pulisciInput(request.getParameter("email"));
-        String password = request.getParameter("password");
-        String confermaPassword = request.getParameter("confermaPassword");
-        String nome = ValidatoreForm.pulisciInput(request.getParameter("nome"));
-        String cognome = ValidatoreForm.pulisciInput(request.getParameter("cognome"));
-        String telefono = ValidatoreForm.pulisciInput(request.getParameter("telefono"));
-        boolean privacyAccettata = request.getParameter("privacy") != null;
-
-        Map<String, String> errori = ValidatoreForm.validaRegistrazione(
-                nome, cognome, email, password, confermaPassword, telefono, privacyAccettata);
-
-        if (!errori.isEmpty()) {
-            request.setAttribute("nome", nome);
-            request.setAttribute("cognome", cognome);
-            request.setAttribute("email", email);
-            request.setAttribute("telefono", telefono);
-            request.setAttribute("errori", errori);
+        if (utenteService.existsByEmail(utenteDTO.getEmail())) {
+            request.setAttribute("error", "Email già registrata");
             request.getRequestDispatcher("/jsp/register.jsp").forward(request, response);
             return;
         }
 
-        try {
-            String ruolo = "registrato";
-            String passwordCifrata = HashUtil.sha1(password);
-
-            Utente nuovoUtente = new Utente();
-            nuovoUtente.setEmail(email);
-            nuovoUtente.setPasswordCifrata(passwordCifrata);
-            nuovoUtente.setNome(nome);
-            nuovoUtente.setCognome(cognome);
-            nuovoUtente.setTelefono(telefono);
-            nuovoUtente.setRuolo(ruolo);
-
-            UtenteDAO utenteDAO = new UtenteDAO();
-            boolean successo = utenteDAO.inserisciUtente(nuovoUtente);
-
-            if (successo) {
-                response.sendRedirect(request.getContextPath() + "/jsp/login.jsp?registrazione=successo");
-            } else {
-                request.setAttribute("erroreRegistrazione", "Registrazione fallita. L'email potrebbe essere già registrata.");
-                request.setAttribute("nome", nome);
-                request.setAttribute("cognome", cognome);
-                request.setAttribute("email", email);
-                request.setAttribute("telefono", telefono);
-                request.getRequestDispatcher("/jsp/register.jsp").forward(request, response);
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-            request.setAttribute("erroreRegistrazione", "Si è verificato un errore durante la registrazione. Riprova più tardi.");
-            request.setAttribute("nome", nome);
-            request.setAttribute("cognome", cognome);
-            request.setAttribute("email", email);
-            request.setAttribute("telefono", telefono);
-            request.getRequestDispatcher("/jsp/register.jsp").forward(request, response);
-        }
+        utenteService.register(utenteDTO);
+        response.sendRedirect(request.getContextPath() + "/login?registered=true");
     }
 }

@@ -1,10 +1,6 @@
 package controller;
 
 import model.Carrello;
-import model.Ordine;
-import model.DettaglioOrdine;
-import model.Utente;
-import model.dao.OrdineDAO;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.*;

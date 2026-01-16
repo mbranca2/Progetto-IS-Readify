@@ -1,46 +1,38 @@
-<%@ page contentType="text/html;charset=UTF-8" language="java" %>
-<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
-<%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <!DOCTYPE html>
-<html lang="it">
+<html>
 <head>
     <meta charset="UTF-8">
-    <title>Login - Librorama</title>
+    <title>Login - Readify</title>
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/style.css">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
 <body>
-<jsp:include page="header.jsp" />
-
-<main class="form-container">
-    <h2>Accedi al tuo account</h2>
+<div class="container">
+    <h1>Accedi</h1>
 
     <c:if test="${not empty error}">
-        <div class="alert alert-error">${error}</div>
+        <div class="error-message">${error}</div>
     </c:if>
 
-    <form action="${pageContext.request.contextPath}/login" method="post"
-          class="form needs-validation" onsubmit="return validateLoginForm()" novalidate>
+    <c:if test="${param.registered != null}">
+        <div class="success-message">Registrazione completata con successo! Effettua il login.</div>
+    </c:if>
+
+    <form action="login" method="post" class="auth-form">
         <div class="form-group">
             <label for="email">Email:</label>
-            <input type="email" id="email" name="email" class="form-control"
-                   value="${empty email ? '' : fn:escapeXml(email)}"
-                   required>
+            <input type="email" id="email" name="email" required>
         </div>
+
         <div class="form-group">
             <label for="password">Password:</label>
-            <input type="password" id="password" name="password" class="form-control"
-                   required minlength="8">
+            <input type="password" id="password" name="password" required>
         </div>
-        <div class="form-group">
-            <button type="submit" class="btn btn-primary">Accedi</button>
-        </div>
+
+        <button type="submit" class="btn">Accedi</button>
     </form>
-    <script src="${pageContext.request.contextPath}/js/login-validation.js"></script>
 
-    <p>Non hai un account? <a href="${pageContext.request.contextPath}/jsp/register.jsp">Registrati</a></p>
-</main>
-
-<jsp:include page="footer.jsp" />
+    <p>Non hai un account? <a href="register">Registrati</a></p>
+</div>
 </body>
 </html>
