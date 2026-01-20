@@ -40,6 +40,7 @@
                 <!-- Menu laterale -->
                 <div class="account-menu">
                     <button class="tab-button active" data-target="profile">Profilo</button>
+                    <button class="tab-button" data-target="address">Indirizzo</button>
                     <button class="tab-button" data-target="password">Password</button>
                     <button class="tab-button" data-target="orders">I miei ordini</button>
                 </div>
@@ -70,6 +71,44 @@
                                        value="${sessionScope.utente.telefono}">
                             </div>
                             <button type="submit" class="btn">Salva modifiche</button>
+                        </form>
+                    </div>
+
+                    <div id="address" class="tab-panel">
+                        <h3 class="section-title">Indirizzo di spedizione</h3>
+                        <form method="post" action="${pageContext.request.contextPath}/gestione-indirizzo" class="account-form">
+                            <div class="form-group">
+                                <label for="via" class="form-label">Via e numero civico*</label>
+                                <input type="text" id="via" name="via" class="form-input"
+                                       value="${sessionScope.indirizzo != null ? sessionScope.indirizzo.via : ''}" required>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="cap" class="form-label">CAP*</label>
+                                    <input type="text" id="cap" name="cap" class="form-input"
+                                           pattern="[0-9]{5}" title="Inserisci un CAP valido (5 cifre)"
+                                           value="${sessionScope.indirizzo != null ? sessionScope.indirizzo.cap : ''}" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="citta" class="form-label">Città*</label>
+                                    <input type="text" id="citta" name="citta" class="form-input"
+                                           value="${sessionScope.indirizzo != null ? sessionScope.indirizzo.citta : ''}" required>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="provincia" class="form-label">Provincia*</label>
+                                    <input type="text" id="provincia" name="provincia" class="form-input"
+                                           maxlength="2" style="text-transform: uppercase;"
+                                           value="${sessionScope.indirizzo != null ? sessionScope.indirizzo.provincia : ''}" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="paese" class="form-label">Paese*</label>
+                                    <input type="text" id="paese" name="paese" class="form-input"
+                                           value="${sessionScope.indirizzo != null && sessionScope.indirizzo.paese != null ? sessionScope.indirizzo.paese : 'Italia'}" required>
+                                </div>
+                            </div>
+                            <button type="submit" class="btn">Salva indirizzo</button>
                         </form>
                     </div>
 
@@ -151,53 +190,81 @@
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const tabButtons = document.querySelectorAll('.tab-button');
-        const tabPanels = document.querySelectorAll('.tab-panel');
-        const urlParams = new URLSearchParams(window.location.search);
-        const activeTab = urlParams.get('tab') || 'profile';
 
-        function setActiveTab(tabId) {
-            const newUrl = window.location.pathname + '?tab=' + tabId;
-            window.history.pushState({ path: newUrl }, '', newUrl);
+        // Funzione per attivare un tab
+        function activateTab(tabId) {
+            // Rimuovi la classe active da tutti i bottoni e dai pannelli
+            document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-panel').forEach(panel => panel.classList.remove('active'));
 
-            tabButtons.forEach(btn => {
-                if (btn.getAttribute('data-target') === tabId) {
-                    btn.classList.add('active');
-                } else {
-                    btn.classList.remove('active');
-                }
-            });
-            
-            tabPanels.forEach(panel => {
-                if (panel.id === tabId) {
-                    panel.classList.add('active');
-                    panel.classList.remove('hidden');
-                } else {
-                    panel.classList.remove('active');
-                    panel.classList.add('hidden');
-                }
-            });
+            // Aggiungi la classe active al bottone cliccato
+            const activeButton = document.querySelector(`[data-target="${tabId}"]`);
+            if (activeButton) {
+                activeButton.classList.add('active');
+            }
+
+            // Mostra il pannello corrispondente
+            const activePanel = document.getElementById(tabId);
+            if (activePanel) {
+                activePanel.classList.add('active');
+            }
+
+            // Salva il tab attivo nell'URL
+            const url = new URL(window.location.href);
+            url.searchParams.set('tab', tabId);
+            window.history.pushState({}, '', url);
         }
 
+        // Aggiungi gestore di eventi a ciascun pulsante
         tabButtons.forEach(button => {
-            button.addEventListener('click', function(e) {
-                e.preventDefault();
-                const targetTab = this.getAttribute('data-target');
-                setActiveTab(targetTab);
+            button.addEventListener('click', () => {
+                const target = button.getAttribute('data-target');
+                activateTab(target);
             });
         });
 
-        if (document.getElementById(activeTab)) {
-            setActiveTab(activeTab);
-        } else if (tabButtons.length > 0) {
-            setActiveTab(tabButtons[0].getAttribute('data-target'));
-        }
-
+        // Gestisci il popstate per il tasto indietro/avanti del browser
         window.addEventListener('popstate', function() {
             const urlParams = new URLSearchParams(window.location.search);
             const tab = urlParams.get('tab') || 'profile';
-            setActiveTab(tab);
+            activateTab(tab);
         });
+
+        // Attiva il tab corretto al caricamento della pagina
+        const urlParams = new URLSearchParams(window.location.search);
+        const activeTab = urlParams.get('tab') || 'profile';
+        activateTab(activeTab);
     });
+
+    // Funzione per la validazione del cambio password
+    function validatePasswordChange() {
+        const form = document.getElementById('passwordChangeForm');
+        const nuovaPassword = document.getElementById('nuovaPassword');
+        const confermaPassword = document.getElementById('confermaPassword');
+        const feedback = document.querySelectorAll('.invalid-feedback');
+
+        // Resetta i messaggi di errore
+        feedback.forEach(el => el.textContent = '');
+        nuovaPassword.classList.remove('is-invalid');
+        confermaPassword.classList.remove('is-invalid');
+
+        // Verifica se le password coincidono
+        if (nuovaPassword.value !== confermaPassword.value) {
+            confermaPassword.nextElementSibling.textContent = 'Le password non coincidono';
+            confermaPassword.classList.add('is-invalid');
+            return false;
+        }
+
+        // Verifica la complessità della password
+        const passwordRegex = /^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z]).{8,}$/;
+        if (!passwordRegex.test(nuovaPassword.value)) {
+            nuovaPassword.nextElementSibling.textContent = 'La password deve contenere almeno 8 caratteri, una maiuscola e un numero';
+            nuovaPassword.classList.add('is-invalid');
+            return false;
+        }
+
+        return true;
+    }
 </script>
 
 </body>

@@ -7,7 +7,7 @@ import java.sql.SQLException;
 public class DBManager {
     private static final String URL = "jdbc:mysql://localhost:3306/librorama?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true";
     private static final String USER = "root";
-    private static final String PASSWORD = "ProgettoTSW";
+    private static final String PASSWORD = "ProgettoIS";
 
     static {
         try {

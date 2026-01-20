@@ -1,6 +1,8 @@
 package controller;
 
+import model.Indirizzo;
 import model.Utente;
+import model.dao.IndirizzoDAO;
 import model.dao.UtenteDAO;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -10,12 +12,23 @@ import java.io.IOException;
 
 @WebServlet("/profilo")
 public class GestioneAccountServlet extends HttpServlet {
+
+    private final IndirizzoDAO indirizzoDAO = new IndirizzoDAO();
+
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         HttpSession session = req.getSession(false);
         if (session == null || session.getAttribute("utente") == null) {
             resp.sendRedirect("jsp/login.jsp");
             return;
+        }
+        // carico l'indirizzo se non è già in sessione
+        if (session.getAttribute("indirizzo") == null) {
+            Utente utente = (Utente) session.getAttribute("utente");
+            Indirizzo indirizzo = indirizzoDAO.trovaIndirizzoPerIdUtente(utente.getIdUtente());
+            if (indirizzo != null) {
+                session.setAttribute("indirizzo", indirizzo);
+            }
         }
         // mostro pagina dati account
         req.getRequestDispatcher("jsp/gestioneAccount.jsp").forward(req, resp);

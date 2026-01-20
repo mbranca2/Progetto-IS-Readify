@@ -1,0 +1,80 @@
+package controller;
+
+import model.Indirizzo;
+import model.Utente;
+import model.dao.IndirizzoDAO;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.annotation.WebServlet;
+import jakarta.servlet.http.*;
+
+import java.io.IOException;
+
+@WebServlet("/gestione-indirizzo")
+public class GestioneIndirizzoServlet extends HttpServlet {
+    private final IndirizzoDAO indirizzoDAO = new IndirizzoDAO();
+
+    @Override
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        // Reindirizza alla pagina di gestione account
+        resp.sendRedirect("profilo");
+    }
+
+    @Override
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        HttpSession session = req.getSession(false);
+        if (session == null || session.getAttribute("utente") == null) {
+            resp.sendRedirect("jsp/login.jsp");
+            return;
+        }
+
+        Utente utente = (Utente) session.getAttribute("utente");
+
+        // Recupero i dati dal form
+        String via = req.getParameter("via");
+        String cap = req.getParameter("cap");
+        String citta = req.getParameter("citta");
+        String provincia = req.getParameter("provincia");
+        String paese = req.getParameter("paese");
+
+        // Validazione
+        if (via == null || via.trim().isEmpty() ||
+                cap == null || !cap.matches("\\d{5}") ||
+                citta == null || citta.trim().isEmpty() ||
+                provincia == null || provincia.trim().length() != 2) {
+
+            req.setAttribute("errore", "Compilare correttamente tutti i campi obbligatori");
+            req.getRequestDispatcher("jsp/gestioneAccount.jsp").forward(req, resp);
+            return;
+        }
+
+        // Creo o aggiorno l'indirizzo
+        Indirizzo indirizzo = (Indirizzo) session.getAttribute("indirizzo");
+        if (indirizzo == null) {
+            indirizzo = new Indirizzo();
+            indirizzo.setIdUtente(utente.getIdUtente());
+        }
+
+        indirizzo.setVia(via.trim());
+        indirizzo.setCap(cap.trim());
+        indirizzo.setCitta(citta.trim());
+        indirizzo.setProvincia(provincia.trim().toUpperCase());
+        indirizzo.setPaese(paese != null ? paese.trim() : "Italia");
+
+        // Salvo nel database
+        boolean successo;
+        if (indirizzo.getIdIndirizzo() == 0) {
+            successo = indirizzoDAO.inserisciIndirizzo(indirizzo);
+        } else {
+            successo = indirizzoDAO.aggiornaIndirizzo(indirizzo);
+        }
+
+        if (successo) {
+            session.setAttribute("indirizzo", indirizzo);
+            req.setAttribute("messaggio", "Indirizzo aggiornato con successo!");
+        } else {
+            req.setAttribute("errore", "Si è verificato un errore durante il salvataggio dell'indirizzo");
+        }
+
+        req.getRequestDispatcher("jsp/gestioneAccount.jsp").forward(req, resp);
+    }
+}

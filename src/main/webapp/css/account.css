@@ -82,17 +82,13 @@
 }
 
 .tab-button {
-    display: block;
-    width: 100%;
-    padding: 0.75rem 1rem;
-    margin-bottom: 0.5rem;
-    text-align: left;
-    border: none;
-    background: none;
+    padding: 10px 20px;
+    background-color: #f8f9fa;
+    border: 1px solid #ddd;
+    border-bottom: none;
     cursor: pointer;
-    border-radius: 4px;
-    transition: var(--transition);
-    color: var(--text-color);
+    margin-right: 5px;
+    border-radius: 4px 4px 0 0;
 }
 
 .tab-button:hover {
@@ -100,9 +96,10 @@
 }
 
 .tab-button.active {
-    background-color: var(--primary-color);
-    color: white;
-    font-weight: 500;
+    background-color: #fff;
+    border-bottom: 1px solid #fff;
+    margin-bottom: -1px;
+    font-weight: bold;
 }
 
 /* Tab */
@@ -112,6 +109,10 @@
 
 .tab-panel {
     display: none;
+    padding: 20px;
+    border: 1px solid #ddd;
+    border-radius: 0 0 4px 4px;
+    margin-top: -1px;
 }
 
 .tab-panel.active {

@@ -67,4 +67,45 @@ public class IndirizzoDAO {
         indirizzo.setPaese(rs.getString("paese"));
         return indirizzo;
     }
+
+    public Indirizzo trovaIndirizzoPerIdUtente(int id) {
+        String query = "SELECT * FROM Indirizzo WHERE id_utente = ?";
+
+        try (Connection conn = DBManager.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(query)) {
+
+            stmt.setInt(1, id);
+            ResultSet rs = stmt.executeQuery();
+
+            if (rs.next()) {
+                return mappaRisultatoAIndirizzo(rs);
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public boolean aggiornaIndirizzo(Indirizzo indirizzo) {
+        String query = "UPDATE Indirizzo SET via = ?, cap = ?, citta = ?, provincia = ?, paese = ? " +
+                "WHERE id_indirizzo = ? AND id_utente = ?";
+
+        try (Connection conn = DBManager.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(query)) {
+
+            stmt.setString(1, indirizzo.getVia());
+            stmt.setString(2, indirizzo.getCap());
+            stmt.setString(3, indirizzo.getCitta());
+            stmt.setString(4, indirizzo.getProvincia());
+            stmt.setString(5, indirizzo.getPaese());
+            stmt.setInt(6, indirizzo.getIdIndirizzo());
+            stmt.setInt(7, indirizzo.getIdUtente());
+
+            return stmt.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
 }
