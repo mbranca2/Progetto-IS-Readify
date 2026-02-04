@@ -35,27 +35,18 @@ public class OrdineDAO {
             conn = DBManager.getConnection();
             conn.setAutoCommit(false);
 
-            // Inserisco ordine
             try (PreparedStatement stmtOrdine = conn.prepareStatement(queryOrdine, Statement.RETURN_GENERATED_KEYS)) {
-                // impost parametri
                 stmtOrdine.setInt(1, ordine.getIdUtente());
 
-                // gestisco l'indirizzo (può essere null)
                 if (ordine.getIdIndirizzo() > 0) {
                     stmtOrdine.setInt(2, ordine.getIdIndirizzo());
                 } else {
                     stmtOrdine.setNull(2, Types.INTEGER);
                 }
 
-                // Impostolo stato
-                String stato = ordine.getStato() != null ?
-                        ordine.getStato().name().toLowerCase() :
-                        StatoOrdine.IN_ELABORAZIONE.name().toLowerCase();
+                String stato = ordine.getStato() != null ? ordine.getStato().name().toLowerCase() : StatoOrdine.IN_ELABORAZIONE.name().toLowerCase();
                 stmtOrdine.setString(3, stato);
-
-                // Imposto il totale (non può essere null per il vincolo CHECK)
-                stmtOrdine.setBigDecimal(4, ordine.getTotale() != null ?
-                        ordine.getTotale() : BigDecimal.ZERO);
+                stmtOrdine.setBigDecimal(4, ordine.getTotale() != null ? ordine.getTotale() : BigDecimal.ZERO);
 
                 int righeInserite = stmtOrdine.executeUpdate();
                 if (righeInserite > 0) {
@@ -64,14 +55,12 @@ public class OrdineDAO {
                         int idOrdine = rs.getInt(1);
                         ordine.setIdOrdine(idOrdine);
 
-                        // Inserisco i dettagli dell'ordine se presenti
                         if (ordine.getDettagli() != null && !ordine.getDettagli().isEmpty()) {
                             if (!inserisciDettagliOrdine(conn, ordine)) {
                                 conn.rollback();
                                 return false;
                             }
                         }
-
                         conn.commit();
                         return true;
                     }
@@ -102,54 +91,39 @@ public class OrdineDAO {
     }
 
     private boolean aggiornaOrdine(Ordine ordine) {
-        String query = "UPDATE Ordine SET id_utente = ?, id_indirizzo = ?, " +
-                "stato = ?, totale = ? WHERE id_ordine = ?";
+        String query = "UPDATE Ordine SET id_utente = ?, id_indirizzo = ?, " + "stato = ?, totale = ? WHERE id_ordine = ?";
 
         Connection conn = null;
         try {
             conn = DBManager.getConnection();
             conn.setAutoCommit(false);
-
             try (PreparedStatement stmt = conn.prepareStatement(query)) {
                 stmt.setInt(1, ordine.getIdUtente());
 
-                // Gestisco l'indirizzo (può essere null)
                 if (ordine.getIdIndirizzo() > 0) {
                     stmt.setInt(2, ordine.getIdIndirizzo());
                 } else {
                     stmt.setNull(2, Types.INTEGER);
                 }
 
-                // Impostolo stato
-                String stato = ordine.getStato() != null ?
-                        ordine.getStato().name().toLowerCase() :
-                        StatoOrdine.IN_ELABORAZIONE.name().toLowerCase();
+                String stato = ordine.getStato() != null ? ordine.getStato().name().toLowerCase() : StatoOrdine.IN_ELABORAZIONE.name().toLowerCase();
                 stmt.setString(3, stato);
-
-                // Imposto il totale (non può essere null per il vincolo CHECK)
-                stmt.setBigDecimal(4, ordine.getTotale() != null ?
-                        ordine.getTotale() : BigDecimal.ZERO);
-
+                stmt.setBigDecimal(4, ordine.getTotale() != null ? ordine.getTotale() : BigDecimal.ZERO);
                 stmt.setInt(5, ordine.getIdOrdine());
 
                 int rowsUpdated = stmt.executeUpdate();
                 if (rowsUpdated > 0) {
-                    // Aggiorno dettagli
                     if (ordine.getDettagli() != null && !ordine.getDettagli().isEmpty()) {
-                        // Prima cancello i vecchi dettagli
                         String deleteQuery = "DELETE FROM Contiene WHERE id_ordine = ?";
                         try (PreparedStatement deleteStmt = conn.prepareStatement(deleteQuery)) {
                             deleteStmt.setInt(1, ordine.getIdOrdine());
                             deleteStmt.executeUpdate();
                         }
-
-                        // Poi inserisco i nuovi
                         if (!inserisciDettagliOrdine(conn, ordine)) {
                             conn.rollback();
                             return false;
                         }
                     }
-
                     conn.commit();
                     return true;
                 }
@@ -189,7 +163,6 @@ public class OrdineDAO {
                 stmt.setBigDecimal(4, dettaglio.getPrezzoUnitario());
                 stmt.addBatch();
 
-                // Aggiorno disponibilità dei libri
                 if (!aggiornaDisponibilitaLibro(conn, dettaglio.getIdLibro(), -dettaglio.getQuantita())) {
                     return false;
                 }
@@ -198,7 +171,6 @@ public class OrdineDAO {
             return true;
         }
     }
-
 
     public List<Ordine> trovaPerIdUtente(int idUtente) {
         List<Ordine> ordini = new ArrayList<>();
@@ -210,9 +182,7 @@ public class OrdineDAO {
                 "WHERE o.id_utente = ? " +
                 "ORDER BY o.data_ordine DESC";
 
-        try (Connection conn = DBManager.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-
+        try (Connection conn = DBManager.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, idUtente);
             ResultSet rs = stmt.executeQuery();
 
@@ -221,20 +191,15 @@ public class OrdineDAO {
                 caricaDettagliOrdine(ordine, conn);
                 ordini.add(ordine);
             }
-
         } catch (SQLException e) {
             logger.log(Level.SEVERE, "Errore durante il recupero degli ordini dell'utente con ID: " + idUtente, e);
         }
-
         return ordini;
     }
 
-
     private Ordine mappaOrdineDaResultSet(ResultSet rs) throws SQLException {
         Ordine ordine = new Ordine();
-
         ordine.setIdOrdine(rs.getInt("id_ordine"));
-
         Timestamp timestamp = rs.getTimestamp("data_ordine");
         ordine.setDataOrdine(timestamp != null ? new Date(timestamp.getTime()) : null);
 
@@ -245,11 +210,8 @@ public class OrdineDAO {
             logger.log(Level.WARNING, "Stato ordine non valido, impostato a IN_ELABORAZIONE", e);
             ordine.setStato(StatoOrdine.IN_ELABORAZIONE);
         }
-
-        // Imposto totale
         ordine.setTotale(rs.getBigDecimal("totale"));
 
-        // Dettagli utente (se presenti neldb)
         try {
             if (hasColumn(rs, "nome") && hasColumn(rs, "cognome") && hasColumn(rs, "email")) {
                 ordine.setIdUtente(rs.getInt("id_utente"));
@@ -260,20 +222,17 @@ public class OrdineDAO {
         } catch (SQLException e) {
             logger.log(Level.FINE, "Errore durante il mapping dei dettagli aggiuntivi", e);
         }
-
         return ordine;
     }
 
     private DettaglioOrdine mappaRisultatoADettaglio(ResultSet rs) throws SQLException {
         DettaglioOrdine dettaglio = new DettaglioOrdine();
-        // non esiste un id univoco per la riga nella tabella Contiene, creo combinazione di id_ordine e id_libro
         dettaglio.setId(rs.getInt("id_ordine") * 1000 + rs.getInt("id_libro")); //creoID univoco
         dettaglio.setIdOrdine(rs.getInt("id_ordine"));
         dettaglio.setIdLibro(rs.getInt("id_libro"));
         dettaglio.setQuantita(rs.getInt("quantita"));
         dettaglio.setPrezzoUnitario(rs.getBigDecimal("prezzo_unitario"));
 
-        // Aggiungo  dettagli aggiuntivi se disponibili
         try {
             ResultSetMetaData metaData = rs.getMetaData();
             int columnCount = metaData.getColumnCount();
@@ -293,8 +252,7 @@ public class OrdineDAO {
                 dettaglio.setIsbnLibro(rs.getString("isbn"));
             }
 
-            // immagine copertina
-            String copertina = null;
+            String copertina;
             if (hasColumn(rs, "immagine_copertina")) {
                 copertina = rs.getString("immagine_copertina");
                 if (copertina != null && !copertina.trim().isEmpty()) {
@@ -305,14 +263,11 @@ public class OrdineDAO {
                     logger.log(Level.INFO, "Impostata immagine copertina: " + copertina);
                 }
             }
-
             logger.log(Level.INFO, "Dettaglio ordine mappato - ID Libro: {0}, Titolo: {1}, Copertina: {2}",
                     new Object[]{dettaglio.getIdLibro(), dettaglio.getTitoloLibro(), dettaglio.getImmagineCopertina()});
-
         } catch (SQLException e) {
             logger.log(Level.WARNING, "Errore durante il mapping dei dettagli aggiuntivi", e);
         }
-
         return dettaglio;
     }
 
@@ -363,13 +318,11 @@ public class OrdineDAO {
                 while (rs.next()) {
                     DettaglioOrdine dettaglio = mappaRisultatoADettaglio(rs);
                     logger.log(Level.INFO, "Dettaglio ordine mappato - ID Libro: {0}, Titolo: {1}, Copertina: {2}, Query SQL: {3}",
-                            new Object[]{dettaglio.getIdLibro(), dettaglio.getTitoloLibro(),
-                                    dettaglio.getImmagineCopertina(), sql});
+                            new Object[]{dettaglio.getIdLibro(), dettaglio.getTitoloLibro(), dettaglio.getImmagineCopertina(), sql});
                     logger.log(Level.INFO, "Valori colonne raw - id_libro: {0}, titolo: {1}, copertina: {2}",
                             new Object[]{rs.getInt("id_libro"), rs.getString("titolo"), rs.getString("immagine_copertina")});
                     dettagli.add(dettaglio);
                 }
-
                 ordine.setDettagli(dettagli);
                 logger.log(Level.INFO, "Caricati {0} dettagli per l'ordine ID {1}",
                         new Object[]{dettagli.size(), ordine.getIdOrdine()});
@@ -381,15 +334,12 @@ public class OrdineDAO {
         }
     }
 
-
     private boolean aggiornaDisponibilitaLibro(Connection conn, int idLibro, int quantitaDaAggiornare) throws SQLException {
-
         String checkQuery = "SELECT disponibilita FROM Libro WHERE id_libro = ? FOR UPDATE";
         String updateQuery = "UPDATE Libro SET disponibilita = ? WHERE id_libro = ?";
 
         try (PreparedStatement checkStmt = conn.prepareStatement(checkQuery);
              PreparedStatement updateStmt = conn.prepareStatement(updateQuery)) {
-
             checkStmt.setInt(1, idLibro);
             ResultSet rs = checkStmt.executeQuery();
 
@@ -400,15 +350,12 @@ public class OrdineDAO {
 
             int quantitaAttuale = rs.getInt("disponibilita");
             int nuovaQuantita = quantitaAttuale + quantitaDaAggiornare;
-
             if (nuovaQuantita < 0) {
                 logger.log(Level.WARNING, "Quantità insufficiente per il libro ID: " + idLibro +
                         ". Disponibile: " + quantitaAttuale +
                         ", Richiesta: " + (-quantitaDaAggiornare));
                 return false;
             }
-
-            // Aggiorno  quantità
             updateStmt.setInt(1, nuovaQuantita);
             updateStmt.setInt(2, idLibro);
 
@@ -417,7 +364,6 @@ public class OrdineDAO {
                 logger.log(Level.WARNING, "Nessun aggiornamento effettuato per il libro ID: " + idLibro);
                 return false;
             }
-
             return true;
         } catch (SQLException e) {
             logger.log(Level.SEVERE, "Errore durante l'aggiornamento della disponibilità del libro ID: " + idLibro, e);

@@ -2,7 +2,9 @@ package controller;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
-import jakarta.servlet.http.*;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import model.Indirizzo;
 import model.Utente;
 import model.dao.IndirizzoDAO;
@@ -17,9 +19,7 @@ import java.util.Map;
 public class RegisterServlet extends HttpServlet {
 
     @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         String email = ValidatoreForm.pulisciInput(request.getParameter("email"));
         String password = request.getParameter("password");
         String confermaPassword = request.getParameter("confermaPassword");
@@ -35,21 +35,19 @@ public class RegisterServlet extends HttpServlet {
 
         Map<String, String> errori = ValidatoreForm.validaRegistrazione(
                 nome, cognome, email, password, confermaPassword, telefono, privacyAccettata, via, citta, cap, provincia, paese);
-
         if (!errori.isEmpty()) {
             request.setAttribute("nome", nome);
             request.setAttribute("cognome", cognome);
             request.setAttribute("email", email);
             request.setAttribute("telefono", telefono);
             request.setAttribute("errori", errori);
-            request.getRequestDispatcher("/jsp/register.jsp").forward(request, response);
+            request.getRequestDispatcher("/WEB-INF/jsp/register.jsp").forward(request, response);
             return;
         }
 
         try {
             String ruolo = "registrato";
             String passwordCifrata = HashUtil.sha1(password);
-
             Utente nuovoUtente = new Utente();
             nuovoUtente.setEmail(email);
             nuovoUtente.setPasswordCifrata(passwordCifrata);
@@ -57,10 +55,9 @@ public class RegisterServlet extends HttpServlet {
             nuovoUtente.setCognome(cognome);
             nuovoUtente.setTelefono(telefono);
             nuovoUtente.setRuolo(ruolo);
-
             UtenteDAO utenteDAO = new UtenteDAO();
-            boolean successo = utenteDAO.inserisciUtente(nuovoUtente);
 
+            boolean successo = utenteDAO.inserisciUtente(nuovoUtente);
             if (successo) {
                 Indirizzo indirizzo = new Indirizzo();
                 indirizzo.setIdUtente(nuovoUtente.getIdUtente());
@@ -69,25 +66,20 @@ public class RegisterServlet extends HttpServlet {
                 indirizzo.setCap(cap);
                 indirizzo.setProvincia(provincia.toUpperCase());
                 indirizzo.setPaese(paese);
-
                 IndirizzoDAO indirizzoDAO = new IndirizzoDAO();
                 boolean indirizzoInserito = indirizzoDAO.inserisciIndirizzo(indirizzo);
-
                 if (!indirizzoInserito) {
-                    // Gestisci l'errore di inserimento indirizzo
-                    // Potresti voler rimuovere l'utente appena creato o segnalare l'errore
                     utenteDAO.eliminaUtente(nuovoUtente.getIdUtente());
                     throw new ServletException("Errore durante la creazione dell'indirizzo");
                 }
-
-                response.sendRedirect(request.getContextPath() + "/jsp/login.jsp?registrazione=successo");
+                response.sendRedirect(request.getContextPath() + "/WEB-INF/jsp/login.jsp?registrazione=successo");
             } else {
                 request.setAttribute("erroreRegistrazione", "Registrazione fallita. L'email potrebbe essere già registrata.");
                 request.setAttribute("nome", nome);
                 request.setAttribute("cognome", cognome);
                 request.setAttribute("email", email);
                 request.setAttribute("telefono", telefono);
-                request.getRequestDispatcher("/jsp/register.jsp").forward(request, response);
+                request.getRequestDispatcher("/WEB-INF/jsp/register.jsp").forward(request, response);
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -96,7 +88,7 @@ public class RegisterServlet extends HttpServlet {
             request.setAttribute("cognome", cognome);
             request.setAttribute("email", email);
             request.setAttribute("telefono", telefono);
-            request.getRequestDispatcher("/jsp/register.jsp").forward(request, response);
+            request.getRequestDispatcher("/WEB-INF/jsp/register.jsp").forward(request, response);
         }
     }
 }

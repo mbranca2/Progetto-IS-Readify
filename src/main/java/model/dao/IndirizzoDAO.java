@@ -6,15 +6,11 @@ import utils.DBManager;
 import java.sql.*;
 
 public class IndirizzoDAO {
-
-    //metodo per l'inserimento di un nuovo indirizzo (mai usato)
     public boolean inserisciIndirizzo(Indirizzo indirizzo) {
-        String query = "INSERT INTO Indirizzo (id_utente, via, cap, citta, provincia, paese) " +
-                     "VALUES (?, ?, ?, ?, ?, ?)";
+        String query = "INSERT INTO Indirizzo (id_utente, via, cap, citta, provincia, paese) " + "VALUES (?, ?, ?, ?, ?, ?)";
 
         try (Connection conn = DBManager.getConnection();
              PreparedStatement stmt = conn.prepareStatement(query, Statement.RETURN_GENERATED_KEYS)) {
-            
             stmt.setInt(1, indirizzo.getIdUtente());
             stmt.setString(2, indirizzo.getVia());
             stmt.setString(3, indirizzo.getCap());
@@ -39,22 +35,17 @@ public class IndirizzoDAO {
     public Indirizzo trovaIndirizzoPerId(int id) {
         String query = "SELECT * FROM Indirizzo WHERE id_indirizzo = ?";
 
-        try (Connection conn = DBManager.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(query)) {
-
+        try (Connection conn = DBManager.getConnection(); PreparedStatement stmt = conn.prepareStatement(query)) {
             stmt.setInt(1, id);
             ResultSet rs = stmt.executeQuery();
-
             if (rs.next()) {
                 return mappaRisultatoAIndirizzo(rs);
             }
-
         } catch (SQLException e) {
             e.printStackTrace();
         }
         return null;
     }
-
 
     private Indirizzo mappaRisultatoAIndirizzo(ResultSet rs) throws SQLException {
         Indirizzo indirizzo = new Indirizzo();
@@ -71,16 +62,12 @@ public class IndirizzoDAO {
     public Indirizzo trovaIndirizzoPerIdUtente(int id) {
         String query = "SELECT * FROM Indirizzo WHERE id_utente = ?";
 
-        try (Connection conn = DBManager.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(query)) {
-
+        try (Connection conn = DBManager.getConnection(); PreparedStatement stmt = conn.prepareStatement(query)) {
             stmt.setInt(1, id);
             ResultSet rs = stmt.executeQuery();
-
             if (rs.next()) {
                 return mappaRisultatoAIndirizzo(rs);
             }
-
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -91,9 +78,7 @@ public class IndirizzoDAO {
         String query = "UPDATE Indirizzo SET via = ?, cap = ?, citta = ?, provincia = ?, paese = ? " +
                 "WHERE id_indirizzo = ? AND id_utente = ?";
 
-        try (Connection conn = DBManager.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(query)) {
-
+        try (Connection conn = DBManager.getConnection(); PreparedStatement stmt = conn.prepareStatement(query)) {
             stmt.setString(1, indirizzo.getVia());
             stmt.setString(2, indirizzo.getCap());
             stmt.setString(3, indirizzo.getCitta());
@@ -101,7 +86,6 @@ public class IndirizzoDAO {
             stmt.setString(5, indirizzo.getPaese());
             stmt.setInt(6, indirizzo.getIdIndirizzo());
             stmt.setInt(7, indirizzo.getIdUtente());
-
             return stmt.executeUpdate() > 0;
         } catch (SQLException e) {
             e.printStackTrace();

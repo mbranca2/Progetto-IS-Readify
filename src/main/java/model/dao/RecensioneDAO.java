@@ -20,12 +20,10 @@ public class RecensioneDAO {
                 "WHERE v.id_libro = ? " +
                 "ORDER BY v.data_valutazione DESC";
 
-        try (Connection conn = DBManager.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(query)) {
-
+        try (Connection conn = DBManager.getConnection(); PreparedStatement stmt = conn.prepareStatement(query)) {
             stmt.setInt(1, idLibro);
             ResultSet rs = stmt.executeQuery();
-            
+
             while (rs.next()) {
                 try {
                     Recensione recensione = new Recensione();
@@ -35,8 +33,7 @@ public class RecensioneDAO {
                     recensione.setVoto(rs.getInt("voto"));
                     recensione.setCommento(rs.getString("commento"));
                     recensione.setDataRecensione(rs.getDate("data_valutazione"));
-                    
-                    // Costruisco  nome utente
+
                     String nome = rs.getString("nome");
                     String cognome = rs.getString("cognome");
                     if (nome != null && cognome != null) {
@@ -44,7 +41,6 @@ public class RecensioneDAO {
                     } else {
                         recensione.setNomeUtente("Utente Anonimo");
                     }
-                    
                     recensioni.add(recensione);
                 } catch (SQLException e) {
                     System.err.println("Errore nel mapping della recensione: " + e.getMessage());
@@ -55,7 +51,6 @@ public class RecensioneDAO {
             e.printStackTrace();
             throw new RuntimeException("Errore durante il recupero delle recensioni", e);
         }
-
         return recensioni;
     }
 }

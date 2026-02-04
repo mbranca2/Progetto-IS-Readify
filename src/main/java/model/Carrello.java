@@ -10,8 +10,7 @@ import java.util.stream.Collectors;
 public class Carrello implements java.io.Serializable {
     private static final long serialVersionUID = 1L;
     private final Map<Libro, Integer> articoli = new HashMap<>();
-    
-    // Classe per rappresentare un articolo di carrello
+
     public static class ArticoloCarrello implements java.io.Serializable {
         private static final long serialVersionUID = 1L;
         private final Libro libro;
@@ -36,12 +35,10 @@ public class Carrello implements java.io.Serializable {
         }
         
         int nuovaQuantita = articoli.getOrDefault(libro, 0) + quantita;
-        
-        // Verifico che la quantità non superi disponibilità
+
         if (nuovaQuantita > libro.getDisponibilita()) {
             return false;
         }
-        
         articoli.put(libro, nuovaQuantita);
         return true;
     }
@@ -57,7 +54,6 @@ public class Carrello implements java.io.Serializable {
         
         for (Map.Entry<Libro, Integer> entry : articoli.entrySet()) {
             if (entry.getKey().getIdLibro() == idLibro) {
-                // Verifico che la nuova quantità non superi la disponibliità
                 if (nuovaQuantita > entry.getKey().getDisponibilita()) {
                     return false;
                 }
@@ -71,7 +67,6 @@ public class Carrello implements java.io.Serializable {
     public int getTotaleArticoli() {
         return articoli.values().stream().mapToInt(Integer::intValue).sum();
     }
-    
 
     public List<ArticoloCarrello> getArticoli() {
         return articoli.entrySet().stream()
@@ -85,7 +80,6 @@ public class Carrello implements java.io.Serializable {
                 .reduce(BigDecimal.ZERO, BigDecimal::add)
                 .setScale(2, RoundingMode.HALF_UP);
     }
-    
 
     public void svuota() {
         articoli.clear();
@@ -107,5 +101,4 @@ public class Carrello implements java.io.Serializable {
                 })
                 .collect(Collectors.toList());
     }
-
 }

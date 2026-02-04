@@ -13,6 +13,7 @@ public class Ordine {
     private StatoOrdine stato;
     private BigDecimal totale;
     private List<DettaglioOrdine> dettagli;
+
     public Ordine() {
         this.dettagli = new ArrayList<>();
         this.dataOrdine = new Date(System.currentTimeMillis());
@@ -20,11 +21,10 @@ public class Ordine {
         this.totale = BigDecimal.ZERO;
     }
 
-
     public int getIdOrdine() {
         return idOrdine;
     }
-    
+
     public void setIdOrdine(int idOrdine) {
         this.idOrdine = idOrdine;
     }

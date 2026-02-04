@@ -98,5 +98,4 @@ public class DettaglioOrdine {
     public void setImmagineCopertina(String immagineCopertina) {
         this.immagineCopertina = immagineCopertina;
     }
-
 }

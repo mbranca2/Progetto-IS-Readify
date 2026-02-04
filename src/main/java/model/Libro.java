@@ -13,14 +13,12 @@ public class Libro {
     private String descrizione;
     private int disponibilita;
     private String copertina;
-    private List<Integer> categorie; // Lista degli ID delle categorie
+    private List<Integer> categorie;
 
-    // Costruttore di default
     public Libro() {
         this.categorie = new ArrayList<>();
     }
 
-    // Costruttore completo
     public Libro(int idLibro, String titolo, String autore, BigDecimal prezzo,
                  String isbn, String descrizione, int disponibilita, String copertina) {
         this.idLibro = idLibro;
@@ -34,7 +32,6 @@ public class Libro {
         this.categorie = new ArrayList<>();
     }
 
-    // Getters e Setters
     public int getIdLibro() {
         return idLibro;
     }
@@ -107,7 +104,6 @@ public class Libro {
         this.categorie = categorie;
     }
 
-    // Metodi di utilità per la gestione delle categorie
     public void aggiungiCategoria(int idCategoria) {
         if (!this.categorie.contains(idCategoria)) {
             this.categorie.add(idCategoria);

@@ -15,9 +15,7 @@ public class DettaglioUtenteServlet extends HttpServlet {
     private final UtenteDAO utenteDAO = new UtenteDAO();
 
     @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 
         String pathInfo = request.getPathInfo();
         if (pathInfo == null || pathInfo.equals("/")) {
@@ -26,25 +24,16 @@ public class DettaglioUtenteServlet extends HttpServlet {
         }
 
         try {
-
             String idParam = pathInfo.substring(1);
             int idUtente = Integer.parseInt(idParam);
-
-            // Recupera l'utente dal database
             Utente utente = utenteDAO.trovaUtentePerId(idUtente);
 
             if (utente == null) {
                 response.sendError(HttpServletResponse.SC_NOT_FOUND, "Utente non trovato");
                 return;
             }
-
-            // Imposto l'utente come attributo della richiesta
             request.setAttribute("utente", utente);
-
-            // Inoltro alla JSP di dettaglio
-            request.getRequestDispatcher("/jsp/admin/dettaglio-utente.jsp")
-                    .forward(request, response);
-
+            request.getRequestDispatcher("/WEB-INF/jsp/admin/dettaglio-utente.jsp").forward(request, response);
         } catch (NumberFormatException e) {
             response.sendError(HttpServletResponse.SC_BAD_REQUEST, "ID utente non valido");
         }

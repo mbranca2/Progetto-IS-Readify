@@ -14,11 +14,9 @@ public class CategoriaDAO {
 
         try (Connection conn = DBManager.getConnection();
              PreparedStatement stmt = conn.prepareStatement(query, Statement.RETURN_GENERATED_KEYS)) {
-
             stmt.setString(1, categoria.getNomeCategoria());
 
             int righeInserite = stmt.executeUpdate();
-
             if (righeInserite > 0) {
                 ResultSet rs = stmt.getGeneratedKeys();
                 if (rs.next()) {
@@ -27,7 +25,6 @@ public class CategoriaDAO {
                 return true;
             }
             return false;
-
         } catch (SQLException e) {
             e.printStackTrace();
             return false;
@@ -41,11 +38,9 @@ public class CategoriaDAO {
         try (Connection conn = DBManager.getConnection();
              Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(query)) {
-
             while (rs.next()) {
                 categorie.add(mappaRisultatoACategoria(rs));
             }
-
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -62,16 +57,12 @@ public class CategoriaDAO {
     public Categoria trovaCategoriaPerId(int id) {
         String query = "SELECT * FROM Categoria WHERE id_categoria = ?";
 
-        try (Connection conn = DBManager.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(query)) {
-
+        try (Connection conn = DBManager.getConnection(); PreparedStatement stmt = conn.prepareStatement(query)) {
             stmt.setInt(1, id);
             ResultSet rs = stmt.executeQuery();
-
             if (rs.next()) {
                 return mappaRisultatoACategoria(rs);
             }
-
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -81,16 +72,12 @@ public class CategoriaDAO {
     public Categoria trovaCategoriaPerNome(String nome) {
         String query = "SELECT * FROM Categoria WHERE nome_categoria = ?";
 
-        try (Connection conn = DBManager.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(query)) {
-
+        try (Connection conn = DBManager.getConnection(); PreparedStatement stmt = conn.prepareStatement(query)) {
             stmt.setString(1, nome);
             ResultSet rs = stmt.executeQuery();
-
             if (rs.next()) {
                 return mappaRisultatoACategoria(rs);
             }
-
         } catch (SQLException e) {
             e.printStackTrace();
         }

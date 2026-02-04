@@ -11,8 +11,8 @@ public class Recensione {
     private Date dataRecensione;
     private String nomeUtente;
 
-    public Recensione() {} //costruttore vuoto dato che non faccio inserire recensioni sul sito
-
+    public Recensione() {
+    }
 
     public void setIdRecensione(int idRecensione) {
         this.idRecensione = idRecensione;
@@ -41,11 +41,11 @@ public class Recensione {
     public void setDataRecensione(Date dataRecensione) {
         this.dataRecensione = dataRecensione;
     }
-    
+
     public int getVoto() {
         return voto;
     }
-    
+
     public String getCommento() {
         return commento;
     }
@@ -57,5 +57,4 @@ public class Recensione {
     public void setNomeUtente(String nomeUtente) {
         this.nomeUtente = nomeUtente;
     }
-
 }

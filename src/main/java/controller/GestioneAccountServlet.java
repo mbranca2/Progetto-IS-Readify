@@ -1,18 +1,20 @@
 package controller;
 
+import jakarta.servlet.ServletException;
+import jakarta.servlet.annotation.WebServlet;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import model.Indirizzo;
 import model.Utente;
 import model.dao.IndirizzoDAO;
 import model.dao.UtenteDAO;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.annotation.WebServlet;
-import jakarta.servlet.http.*;
 
 import java.io.IOException;
 
 @WebServlet("/profilo")
 public class GestioneAccountServlet extends HttpServlet {
-
     private final IndirizzoDAO indirizzoDAO = new IndirizzoDAO();
 
     @Override
@@ -22,7 +24,7 @@ public class GestioneAccountServlet extends HttpServlet {
             resp.sendRedirect("jsp/login.jsp");
             return;
         }
-        // carico l'indirizzo se non è già in sessione
+
         if (session.getAttribute("indirizzo") == null) {
             Utente utente = (Utente) session.getAttribute("utente");
             Indirizzo indirizzo = indirizzoDAO.trovaIndirizzoPerIdUtente(utente.getIdUtente());
@@ -30,7 +32,6 @@ public class GestioneAccountServlet extends HttpServlet {
                 session.setAttribute("indirizzo", indirizzo);
             }
         }
-        // mostro pagina dati account
         req.getRequestDispatcher("jsp/gestioneAccount.jsp").forward(req, resp);
     }
 
@@ -42,12 +43,11 @@ public class GestioneAccountServlet extends HttpServlet {
             return;
         }
         Utente utente = (Utente) session.getAttribute("utente");
-        // Recupero i dati dal form
         String nome = req.getParameter("nome");
         String cognome = req.getParameter("cognome");
         String email = req.getParameter("email");
         String telefono = req.getParameter("telefono");
-        // Validazione server-side
+
         if (nome == null || nome.trim().isEmpty() ||
                 cognome == null || cognome.trim().isEmpty() ||
                 email == null || email.trim().isEmpty()) {
@@ -55,13 +55,12 @@ public class GestioneAccountServlet extends HttpServlet {
             req.getRequestDispatcher("jsp/gestioneAccount.jsp").forward(req, resp);
             return;
         }
-        // Aggiorno i dati
         utente.setNome(nome.trim());
         utente.setCognome(cognome.trim());
         utente.setEmail(email.trim().toLowerCase());
         utente.setTelefono(telefono != null ? telefono.trim() : null);
-        // salvo in db
         UtenteDAO utenteDAO = new UtenteDAO();
+
         boolean aggiornato = utenteDAO.aggiornaUtente(utente);
         if (aggiornato) {
             session.setAttribute("utente", utente);

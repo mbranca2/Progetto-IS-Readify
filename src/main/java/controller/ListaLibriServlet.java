@@ -20,11 +20,9 @@ public class ListaLibriServlet extends HttpServlet {
         System.out.println("ListaLibriServlet: Inizio elaborazione richiesta");
         LibroDAO libroDAO = new LibroDAO();
         CategoriaDAO categoriaDAO = new CategoriaDAO();
-        
-        // Carico tutti i libri e categore
         List<Libro> listaLibri = libroDAO.trovaTutti();
         List<Categoria> categorie = categoriaDAO.trovaTutteCategorie();
-        
+
         if (listaLibri == null) {
             System.out.println("ListaLibriServlet: La lista dei libri è null");
         } else {
@@ -33,11 +31,10 @@ public class ListaLibriServlet extends HttpServlet {
                 System.out.println(" - " + libro.getTitolo() + " (ID: " + libro.getIdLibro() + ")");
             }
         }
-        
-        // Aggiungo le categorie alla richiesta
+
         req.setAttribute("categorie", categorie);
         req.setAttribute("libri", listaLibri);
-        req.getRequestDispatcher("/jsp/catalogo.jsp").forward(req, resp);
-        System.out.println("ListaLibriServlet: Reindirizzamento a /jsp/catalogo.jsp");
+        req.getRequestDispatcher("/WEB-INF/jsp/catalogo.jsp").forward(req, resp);
+        System.out.println("ListaLibriServlet: Reindirizzamento a /WEB-INF/jsp/catalogo.jsp");
     }
 }

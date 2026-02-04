@@ -10,7 +10,7 @@ public class Indirizzo {
     private String paese;
 
     public Indirizzo() {
-        this.paese = "Italia"; // Valore predefinito
+        this.paese = "Italia";
     }
 
     public int getIdIndirizzo() {

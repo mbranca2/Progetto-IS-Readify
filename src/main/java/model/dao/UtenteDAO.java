@@ -9,14 +9,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class UtenteDAO {
-
     public boolean inserisciUtente(Utente utente) {
-        String query = "INSERT INTO Utente (email, password_cifrata, nome, cognome, ruolo, telefono) " +
-                      "VALUES (?, ?, ?, ?, ?, ?)";
-
+        String query = "INSERT INTO Utente (email, password_cifrata, nome, cognome, ruolo, telefono) " + "VALUES (?, ?, ?, ?, ?, ?)";
         try (Connection conn = DBManager.getConnection();
              PreparedStatement stmt = conn.prepareStatement(query, Statement.RETURN_GENERATED_KEYS)) {
-
             stmt.setString(1, utente.getEmail());
             stmt.setString(2, utente.getPasswordCifrata());
             stmt.setString(3, utente.getNome());
@@ -25,7 +21,6 @@ public class UtenteDAO {
             stmt.setString(6, utente.getTelefono());
 
             int righeInserite = stmt.executeUpdate();
-
             if (righeInserite > 0) {
                 ResultSet rs = stmt.getGeneratedKeys();
                 if (rs.next()) {
@@ -34,7 +29,6 @@ public class UtenteDAO {
                 return true;
             }
             return false;
-
         } catch (SQLException e) {
             e.printStackTrace();
             return false;
@@ -44,25 +38,19 @@ public class UtenteDAO {
     public Utente trovaUtentePerId(int id) {
         String query = "SELECT * FROM Utente WHERE id_utente = ?";
 
-        try (Connection conn = DBManager.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(query)) {
-
+        try (Connection conn = DBManager.getConnection(); PreparedStatement stmt = conn.prepareStatement(query)) {
             stmt.setInt(1, id);
             ResultSet rs = stmt.executeQuery();
 
             if (rs.next()) {
                 return mappaRisultatoAUtente(rs);
             }
-
         } catch (SQLException e) {
             e.printStackTrace();
         }
         return null;
     }
 
-
-
-    //  per mappare un ResultSet a un oggetto Utente
     private Utente mappaRisultatoAUtente(ResultSet rs) throws SQLException {
         Utente utente = new Utente();
         utente.setIdUtente(rs.getInt("id_utente"));
@@ -75,7 +63,6 @@ public class UtenteDAO {
         return utente;
     }
 
-    // List di tutti gli utenti
     public List<Utente> trovaTuttiUtenti() {
         List<Utente> utenti = new ArrayList<>();
         String query = "SELECT * FROM Utente";
@@ -87,7 +74,6 @@ public class UtenteDAO {
             while (rs.next()) {
                 utenti.add(mappaRisultatoAUtente(rs));
             }
-
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -98,9 +84,7 @@ public class UtenteDAO {
         Utente user = null;
         String sql = "SELECT * FROM Utente WHERE email = ?";
 
-        try (Connection conn = DBManager.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-
+        try (Connection conn = DBManager.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, email);
 
             try (ResultSet rs = stmt.executeQuery()) {
@@ -129,41 +113,31 @@ public class UtenteDAO {
     }
 
     public boolean aggiornaUtente(Utente utente) {
-        String query = "UPDATE Utente SET email = ?, nome = ?, cognome = ?, " +
-                "ruolo = ?, telefono = ? WHERE id_utente = ?";
+        String query = "UPDATE Utente SET email = ?, nome = ?, cognome = ?, " + "ruolo = ?, telefono = ? WHERE id_utente = ?";
 
-        try (Connection conn = DBManager.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(query)) {
-
+        try (Connection conn = DBManager.getConnection(); PreparedStatement stmt = conn.prepareStatement(query)) {
             stmt.setString(1, utente.getEmail());
             stmt.setString(2, utente.getNome());
             stmt.setString(3, utente.getCognome());
             stmt.setString(4, utente.getRuolo());
             stmt.setString(5, utente.getTelefono());
             stmt.setInt(6, utente.getIdUtente());
-
             return stmt.executeUpdate() > 0;
-
         } catch (SQLException e) {
             e.printStackTrace();
             return false;
         }
     }
 
-    // Eliminazione utente
     public boolean eliminaUtente(int id) {
         String query = "DELETE FROM Utente WHERE id_utente = ?";
 
-        try (Connection conn = DBManager.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(query)) {
-
+        try (Connection conn = DBManager.getConnection(); PreparedStatement stmt = conn.prepareStatement(query)) {
             stmt.setInt(1, id);
             return stmt.executeUpdate() > 0;
-
         } catch (SQLException e) {
             e.printStackTrace();
             return false;
         }
     }
-
 }

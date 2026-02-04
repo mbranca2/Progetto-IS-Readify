@@ -20,9 +20,7 @@ public class ModificaLibroServlet extends HttpServlet {
     private final LibroDAO libroDAO = new LibroDAO();
 
     @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        // Gestisce la visualizzazione del form di modifica
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         String idParam = request.getParameter("id");
 
         if (idParam == null || idParam.isEmpty()) {
@@ -42,7 +40,7 @@ public class ModificaLibroServlet extends HttpServlet {
             List<Categoria> categorie = new CategoriaDAO().trovaTutteCategorie();
             request.setAttribute("categorie", categorie);
             request.setAttribute("libro", libro);
-            request.getRequestDispatcher("/jsp/admin/modifica-libro.jsp").forward(request, response);
+            request.getRequestDispatcher("/WEB-INF/jsp/admin/modifica-libro.jsp").forward(request, response);
 
         } catch (NumberFormatException e) {
             response.sendError(HttpServletResponse.SC_BAD_REQUEST, "ID libro non valido");
@@ -50,9 +48,7 @@ public class ModificaLibroServlet extends HttpServlet {
     }
 
     @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        // Gestisce l'invio del form di modifica
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         String idParam = request.getParameter("idLibro");
 
         if (idParam == null || idParam.isEmpty()) {
@@ -69,7 +65,6 @@ public class ModificaLibroServlet extends HttpServlet {
                 return;
             }
 
-            // Aggiorno i attributi del libro
             libro.setTitolo(request.getParameter("titolo"));
             libro.setAutore(request.getParameter("autore"));
             libro.setPrezzo(new BigDecimal(request.getParameter("prezzo").replace(",", ".")));
@@ -77,14 +72,12 @@ public class ModificaLibroServlet extends HttpServlet {
             int idCategoria = Integer.parseInt(request.getParameter("categoria"));
             libro.aggiungiCategoria(idCategoria);
             libro.setDescrizione(request.getParameter("descrizione"));
-
-            // lascio l'immagine attuale
             String copertina = request.getParameter("copertina");
+
             if (copertina != null && !copertina.trim().isEmpty()) {
                 libro.setCopertina(copertina);
             }
 
-            // Aggiorno il libro nel database
             boolean aggiornato = libroDAO.aggiornaLibro(libro);
 
             if (aggiornato) {
@@ -93,9 +86,8 @@ public class ModificaLibroServlet extends HttpServlet {
             } else {
                 request.setAttribute("errore", "Impossibile aggiornare il libro");
                 request.setAttribute("libro", libro);
-                request.getRequestDispatcher("/jsp/admin/modifica-libro.jsp").forward(request, response);
+                request.getRequestDispatcher("/WEB-INF/jsp/admin/modifica-libro.jsp").forward(request, response);
             }
-
         } catch (NumberFormatException e) {
             response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Dati non validi");
         }

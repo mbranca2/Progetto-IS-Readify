@@ -6,18 +6,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Home - Librorama</title>
+    <title>Home - Readify</title>
     <link rel="stylesheet" href="<c:url value='/css/style.css'/>">
     <link rel="stylesheet" href="<c:url value='/css/homepage.css'/>">
 </head>
 <body>
     <!-- Header -->
-    <%@ include file="/jsp/header.jsp" %>
+    <%@ include file="/WEB-INF/jsp/header.jsp" %>
 
     <!-- Home Section -->
     <section class="home">
         <div class="container">
-            <h1 style="color: white">Benvenuto su Librorama</h1>
+            <h1 style="color: white">Benvenuto su Readify</h1>
             <p>Scopri la nostra vasta selezione di libri e approfitta delle migliori offerte</p>
             <div class="home-buttons">
                 <a href="<c:url value='/libri'/>" class="button">
@@ -30,7 +30,7 @@
     <!-- Sezione Caratteristiche -->
     <section class="features">
         <div class="container">
-            <h2 class="section-title">Perché scegliere Librorama?</h2>
+            <h2 class="section-title">Perché scegliere Readify?</h2>
             <div class="features-grid">
                 <div class="feature">
                     <div class="feature-icon">📚</div>
@@ -52,6 +52,6 @@
     </section>
 
     <!-- Footer -->
-    <jsp:include page="/jsp/footer.jsp" />
+    <jsp:include page="/WEB-INF/jsp/footer.jsp" />
 </body>
 </html>

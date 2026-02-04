@@ -28,7 +28,7 @@
         <c:choose>
           <c:when test="${not empty sessionScope.utente}">
             <div class="user-menu">
-              <a href="<c:url value='/jsp/gestioneAccount.jsp' />" class="nav-link user-link">
+              <a href="<c:url value='/WEB-INF/jsp/gestioneAccount.jsp' />" class="nav-link user-link">
                 <i class="fas fa-user"></i>
                 ${sessionScope.utente.nome}
               </a>
@@ -37,7 +37,7 @@
                 <a href="<c:url value='/profilo/ordini' />">I miei ordini</a>
                 <c:if test="${sessionScope.utente.ruolo eq 'admin'}">
                   <div class="dropdown-divider"></div>
-                  <a href="<c:url value='/jsp/admin/dashboard.jsp' />" class="admin-link">
+                  <a href="<c:url value='/WEB-INF/jsp/admin/dashboard.jsp' />" class="admin-link">
                     <i class="fas fa-cog me-1"></i> Area Amministrativa
                   </a>
                 </c:if>
@@ -47,10 +47,10 @@
             </div>
           </c:when>
           <c:otherwise>
-            <a href="<c:url value='/jsp/login.jsp' />" class="nav-link">
+            <a href="<c:url value='/WEB-INF/jsp/login.jsp' />" class="nav-link">
               <i class="fas fa-sign-in-alt"></i> Accedi
             </a>
-            <a href="<c:url value='/jsp/register.jsp' />" class="btn btn-primary">Registrati</a>
+            <a href="<c:url value='/WEB-INF/jsp/register.jsp' />" class="btn btn-primary">Registrati</a>
           </c:otherwise>
         </c:choose>
       </nav>

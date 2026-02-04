@@ -1,11 +1,18 @@
 package controller;
-import jakarta.servlet.*;
-import jakarta.servlet.http.*;
-import jakarta.servlet.annotation.*;
-import model.*;
+
+import com.google.gson.Gson;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.annotation.WebServlet;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
+import model.Carrello;
+import model.Libro;
+import model.Utente;
 import model.dao.CarrelloDAO;
 import model.dao.LibroDAO;
-import com.google.gson.Gson;
+
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.sql.SQLException;
@@ -20,9 +27,8 @@ public class CarrelloServlet extends HttpServlet {
     private final Gson gson = new Gson();
 
     @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        HttpSession session = request.getSession(true); //creo nuova sessione se non esiste
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        HttpSession session = request.getSession(true);
         Carrello carrello = (Carrello) session.getAttribute("carrello");
 
         if (carrello == null) {
@@ -48,8 +54,8 @@ public class CarrelloServlet extends HttpServlet {
                 return;
             }
 
-            boolean successo = false;
-            String messaggio = "";
+            boolean successo;
+            String messaggio;
 
             switch (azione.toLowerCase()) {
                 case "aggiungi":
@@ -58,27 +64,23 @@ public class CarrelloServlet extends HttpServlet {
                     successo = carrello.aggiungiLibro(libro, quantita);
                     messaggio = successo ? "Libro aggiunto al carrello" : "Quantità non disponibile";
                     break;
-
                 case "rimuovi":
                     successo = carrello.rimuoviLibro(idLibro);
                     messaggio = successo ? "Libro rimosso dal carrello" : "Libro non trovato";
                     break;
-
                 case "aggiorna":
                     int nuovaQuantita = Integer.parseInt(request.getParameter("quantita"));
                     successo = carrello.aggiornaQuantita(idLibro, nuovaQuantita);
                     messaggio = successo ? "Quantità aggiornata" : "Errore nell'aggiornamento";
                     break;
-
                 default:
                     inviaErrore(response, "Azione non valida");
                     return;
             }
 
-            // Se l'utente è loggato, salviamo il carrello nel database
             if (session.getAttribute("utente") != null && successo) {
                 CarrelloDAO carrelloDAO = new CarrelloDAO();
-                carrelloDAO.salvaCarrello(((Utente)session.getAttribute("utente")).getIdUtente(), carrello);
+                carrelloDAO.salvaCarrello(((Utente) session.getAttribute("utente")).getIdUtente(), carrello);
             }
 
             if (isAjaxRequest(request)) {
@@ -86,7 +88,6 @@ public class CarrelloServlet extends HttpServlet {
             } else {
                 response.sendRedirect(request.getHeader("referer")); // riportato alla pagina precedente
             }
-
         } catch (NumberFormatException e) {
             inviaErrore(response, "ID libro non valido");
         } catch (SQLException e) {
@@ -95,8 +96,7 @@ public class CarrelloServlet extends HttpServlet {
     }
 
     @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         HttpSession session = request.getSession(true);
         Carrello carrello = (Carrello) session.getAttribute("carrello");
 
@@ -104,9 +104,8 @@ public class CarrelloServlet extends HttpServlet {
             carrello = new Carrello();
             session.setAttribute("carrello", carrello);
         }
-
         request.setAttribute("carrello", carrello);
-        request.getRequestDispatcher("/jsp/visualizzaCarrello.jsp").forward(request, response);
+        request.getRequestDispatcher("/WEB-INF/jsp/visualizzaCarrello.jsp").forward(request, response);
     }
 
     private boolean gestisciAggiungiLibro(Carrello carrello, Libro libro, HttpServletRequest request) {
@@ -151,8 +150,8 @@ public class CarrelloServlet extends HttpServlet {
 
         response.getWriter().write(gson.toJson(errorResponse));
     }
-    private void inviaRispostaJSON(HttpServletResponse response, boolean successo,
-                                   String messaggio, Carrello carrello) throws IOException {
+
+    private void inviaRispostaJSON(HttpServletResponse response, boolean successo, String messaggio, Carrello carrello) throws IOException {
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
         Map<String, Object> jsonResponse = new HashMap<>();
