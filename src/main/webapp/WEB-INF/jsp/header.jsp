@@ -1,18 +1,18 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 
-<link rel="stylesheet" href="${pageContext.request.contextPath}/css/main.css">
-<link rel="stylesheet" href="${pageContext.request.contextPath}/css/carrello.css">
-<link rel="stylesheet" href="${pageContext.request.contextPath}/css/forms.css">
+<link rel="stylesheet" href="<c:url value='/css/main.css' />">
+<link rel="stylesheet" href="<c:url value='/css/carrello.css' />">
+<link rel="stylesheet" href="<c:url value='/css/forms.css' />">
 
-<script src="${pageContext.request.contextPath}/js/main.js" defer></script>
-<script src="${pageContext.request.contextPath}/js/carrello.js" defer></script>
+<script src="<c:url value='/js/main.js' />" defer></script>
+<script src="<c:url value='/js/carrello.js' />" defer></script>
 <header>
   <div class="container">
     <div class="header-content">
-      <h1><a href="<c:url value='/' />" class="logo-link">Readify</a></h1>
+      <h1><a href="<c:url value='/home' />" class="logo-link">Readify</a></h1>
       <nav>
-        <a href="<c:url value='/' />" class="nav-link">
+        <a href="<c:url value='/home' />" class="nav-link">
           <i class="fas fa-home"></i> Home
         </a>
         <a href="${pageContext.request.contextPath}/libri" class="nav-link">

@@ -29,6 +29,12 @@ public class GestioneUtentiServlet extends HttpServlet {
             return;
         }
 
+        String azione = req.getParameter("azione");
+        if ("nuovo".equals(azione)) {
+            req.getRequestDispatcher("/WEB-INF/jsp/admin/nuovoUtente.jsp").forward(req, resp);
+            return;
+        }
+
         UtenteDAO utenteDAO = new UtenteDAO();
         List<Utente> listaUtenti = utenteDAO.trovaTuttiUtenti();
         if (listaUtenti == null) {

@@ -167,7 +167,7 @@ LEFT JOIN
     LibroCategoria lc ON l.id_libro = lc.id_libro
 LEFT JOIN 
     Categoria c ON lc.id_categoria = c.id_categoria
-GROUP BY 
+GROUP BY
     l.id_libro;
 
 CREATE INDEX idx_libro_titolo ON Libro(titolo);
@@ -175,7 +175,5 @@ CREATE INDEX idx_libro_autore ON Libro(autore);
 CREATE INDEX idx_libro_prezzo ON Libro(prezzo);
 CREATE INDEX idx_ordine_utente ON Ordine(id_utente);
 CREATE INDEX idx_ordine_data ON Ordine(data_ordine);
-
-
 SELECT 'Database inizializzato con successo!' AS Message;
 

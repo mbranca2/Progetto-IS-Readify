@@ -76,7 +76,7 @@
     </form>
 
     <p>
-        <a href="${pageContext.request.contextPath}/WEB-INF/jsp/admin/gestione-utenti.jsp" class="btn btn-link">
+        <a href="${pageContext.request.contextPath}/admin/utenti" class="btn btn-link">
             <i class="fas fa-arrow-left me-2"></i>Torna alla lista degli utenti
         </a>
     </p>

@@ -32,6 +32,12 @@ public class GestioneLibriServlet extends HttpServlet {
             return;
         }
 
+        String azione = req.getParameter("azione");
+        if ("nuovo".equals(azione)) {
+            req.getRequestDispatcher("/WEB-INF/jsp/admin/inserisciLibro.jsp").forward(req, resp);
+            return;
+        }
+
         String titolo = req.getParameter("titolo");
         String autore = req.getParameter("autore");
         String categoria = req.getParameter("categoria");

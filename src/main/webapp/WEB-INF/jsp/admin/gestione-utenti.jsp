@@ -20,7 +20,7 @@
 <div class="user-management-container">
     <div class="page-header">
         <h1 class="page-title">Gestione Utenti</h1>
-        <a href="${pageContext.request.contextPath}/WEB-INF/jsp/admin/nuovoUtente.jsp" class="btn btn-primary">
+        <a href="${pageContext.request.contextPath}/admin/utenti?azione=nuovo" class="btn btn-primary">
             <span class="icon icon-user-plus"></span>Nuovo Utente
         </a>
     </div>
