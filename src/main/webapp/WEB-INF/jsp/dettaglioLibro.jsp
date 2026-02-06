@@ -17,7 +17,7 @@
            value="${descrizioneLunghezza > 160 ? descrizioneBreve.substring(0, 160) : descrizioneBreve}"/>
     <meta name="description"
           content="${not empty libro.descrizione ? descrizioneDaMostrare : 'Dettagli del libro ' += libro.titolo}">
-    <title>${libro.titolo} - Librorama</title>
+    <title>${libro.titolo} - Readify</title>
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/style.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/book-detail.css">
 </head>

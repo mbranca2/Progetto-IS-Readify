@@ -1,14 +1,12 @@
 package service.account;
 
 public class RegistrationData {
-    // dati utente
     public final String email;
-    public final String password; // in chiaro (il service la cifra)
+    public final String password;
     public final String nome;
     public final String cognome;
     public final String telefono;
 
-    // dati indirizzo
     public final String via;
     public final String citta;
     public final String cap;

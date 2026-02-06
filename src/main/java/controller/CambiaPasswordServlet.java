@@ -23,6 +23,22 @@ public class CambiaPasswordServlet extends HttpServlet {
     }
 
     @Override
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+
+        HttpSession session = request.getSession(false);
+        Utente utente = (session != null) ? (Utente) session.getAttribute("utente") : null;
+
+        if (utente == null) {
+            response.sendRedirect(request.getContextPath() + "/login");
+            return;
+        }
+
+        // Nel progetto non esiste "profilo.jsp": la pagina profilo è "gestioneAccount.jsp"
+        request.getRequestDispatcher("/WEB-INF/jsp/gestioneAccount.jsp").forward(request, response);
+    }
+
+    @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
@@ -34,17 +50,30 @@ public class CambiaPasswordServlet extends HttpServlet {
             return;
         }
 
-        String oldPassword = request.getParameter("oldPassword");
-        String newPassword = request.getParameter("newPassword");
-        String confirmPassword = request.getParameter("confirmPassword");
+        String oldPassword = trim(request.getParameter("oldPassword"));
+        String newPassword = trim(request.getParameter("newPassword"));
+        String confirmPassword = trim(request.getParameter("confirmPassword"));
 
-        if (newPassword == null || confirmPassword == null || !newPassword.equals(confirmPassword)) {
-            request.setAttribute("errore", "Le nuove password non coincidono.");
-            request.getRequestDispatcher("/WEB-INF/jsp/profilo.jsp").forward(request, response);
+        if (oldPassword.isEmpty() || newPassword.isEmpty() || confirmPassword.isEmpty()) {
+            request.setAttribute("errore", "Compila tutti i campi.");
+            request.getRequestDispatcher("/WEB-INF/jsp/gestioneAccount.jsp").forward(request, response);
             return;
         }
 
-        boolean ok = accountService.changePassword(utente.getIdUtente(), oldPassword, newPassword);
+        if (!newPassword.equals(confirmPassword)) {
+            request.setAttribute("errore", "Le nuove password non coincidono.");
+            request.getRequestDispatcher("/WEB-INF/jsp/gestioneAccount.jsp").forward(request, response);
+            return;
+        }
+
+        boolean ok;
+        try {
+            ok = accountService.changePassword(utente.getIdUtente(), oldPassword, newPassword);
+        } catch (Exception e) {
+            request.setAttribute("errore", "Errore interno durante l'aggiornamento della password.");
+            request.getRequestDispatcher("/WEB-INF/jsp/gestioneAccount.jsp").forward(request, response);
+            return;
+        }
 
         if (ok) {
             request.setAttribute("successo", "Password aggiornata con successo.");
@@ -52,6 +81,10 @@ public class CambiaPasswordServlet extends HttpServlet {
             request.setAttribute("errore", "Impossibile aggiornare la password. Verifica la password attuale.");
         }
 
-        request.getRequestDispatcher("/WEB-INF/jsp/profilo.jsp").forward(request, response);
+        request.getRequestDispatcher("/WEB-INF/jsp/gestioneAccount.jsp").forward(request, response);
+    }
+
+    private String trim(String s) {
+        return (s == null) ? "" : s.trim();
     }
 }

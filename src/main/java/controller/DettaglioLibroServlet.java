@@ -56,8 +56,7 @@ public class DettaglioLibroServlet extends HttpServlet {
             canReview = reviewService.canUserReview(utente.getIdUtente(), idLibro);
         }
         request.setAttribute("canReview", canReview);
-
-        request.getRequestDispatcher("/WEB-INF/jsp/dettaglio-libro.jsp").forward(request, response);
+        request.getRequestDispatcher("/WEB-INF/jsp/dettaglioLibro.jsp").forward(request, response);
     }
 
     private int parseIntSafe(String s) {
@@ -68,4 +67,3 @@ public class DettaglioLibroServlet extends HttpServlet {
         }
     }
 }
-

@@ -6,7 +6,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestione Utenti - Librorama</title>
+    <title>Gestione Utenti - Readify</title>
     <jsp:include page="../header.jsp" />
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/user-management.css">
 </head>

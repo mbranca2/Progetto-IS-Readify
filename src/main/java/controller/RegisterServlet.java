@@ -53,7 +53,6 @@ public class RegisterServlet extends HttpServlet {
         }
 
         try {
-            // delega al Service: hash + inserimento utente + inserimento indirizzo + rollback
             RegistrationData data = new RegistrationData(
                     email,
                     password,

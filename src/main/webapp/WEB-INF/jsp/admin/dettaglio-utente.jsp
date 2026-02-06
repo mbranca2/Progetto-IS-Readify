@@ -6,11 +6,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Dettagli utente - Pannello di amministrazione Librorama">
-    <title>${utente.nome} ${utente.cognome} - Dettaglio Utente | Librorama</title>
+    <meta name="description" content="Dettagli utente - Pannello di amministrazione Readify">
+    <title>${utente.nome} ${utente.cognome} - Dettaglio Utente | Readify</title>
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/style.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/admin/user-detail.css">
-    <meta name="description" content="Dettagli utente ${utente.nome} ${utente.cognome} - Pannello di amministrazione Librorama">
+    <meta name="description" content="Dettagli utente ${utente.nome} ${utente.cognome} - Pannello di amministrazione Readify">
 </head>
 <body>
 <div class="user-detail-container">

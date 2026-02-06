@@ -15,7 +15,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Catalogo - Librorama</title>
+    <title>Catalogo - Readify</title>
     <link rel="stylesheet" href="<c:url value='/css/style.css' />">
     <link rel="stylesheet" href="<c:url value='/css/catalogo.css' />">
 </head>
@@ -112,7 +112,7 @@
             <div class="sidebar-section">
                 <h3>Contatti</h3>
                 <p><span class="icon">📞</span> 123 456 7890</p>
-                <p><span class="icon">✉️</span> info@librorama.it</p>
+                <p><span class="icon">✉️</span> info@readify.it</p>
                 <p><span class="icon">📍</span> Via Roma 123, Milano</p>
             </div>
         </aside>

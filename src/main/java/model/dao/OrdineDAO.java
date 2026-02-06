@@ -145,6 +145,29 @@ public class OrdineDAO {
         return ordini;
     }
 
+    public List<Ordine> trovaTuttiOrdini() {
+        List<Ordine> ordini = new ArrayList<>();
+
+        String sql = "SELECT o.* " +
+                "FROM Ordine o " +
+                "ORDER BY o.data_ordine DESC";
+
+        try (Connection conn = DBManager.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+
+            while (rs.next()) {
+                Ordine ordine = mappaOrdineDaResultSet(rs);
+                ordini.add(ordine);
+            }
+
+        } catch (SQLException e) {
+            logger.log(Level.SEVERE, "Errore durante il recupero di tutti gli ordini (admin).", e);
+        }
+
+        return ordini;
+    }
+
     public Ordine findById(Connection conn, int idOrdine) throws SQLException {
         String sql = "SELECT * FROM Ordine WHERE id_ordine = ?";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {

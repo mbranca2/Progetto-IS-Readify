@@ -5,8 +5,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Modifica i dati dell'utente ${utente.nome} ${utente.cognome} su Librorama">
-  <title>Modifica Utente - Librorama</title>
+  <meta name="description" content="Modifica i dati dell'utente ${utente.nome} ${utente.cognome} su Readify">
+  <title>Modifica Utente - Readify</title>
   <link rel="stylesheet" href="${pageContext.request.contextPath}/css/style.css">
   <link rel="stylesheet" href="${pageContext.request.contextPath}/css/admin/user-edit.css">
 </head>

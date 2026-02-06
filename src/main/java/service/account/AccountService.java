@@ -19,8 +19,5 @@ public interface AccountService {
 
     boolean deleteAddress(int idUtente, int idIndirizzo);
 
-    /**
-     * Cambia password dell'utente (verifica oldPassword).
-     */
     boolean changePassword(int idUtente, String oldPassword, String newPassword);
 }

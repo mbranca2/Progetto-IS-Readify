@@ -6,7 +6,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Carrello - Librorama</title>
+    <title>Carrello - Readify</title>
     <link rel="stylesheet" href="<c:url value='/css/style.css' />">
     <link rel="stylesheet" href="<c:url value='/css/cart.css' />">
 </head>

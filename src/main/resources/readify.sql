@@ -109,7 +109,7 @@ CREATE TABLE Recensione (
 );
 
 INSERT INTO Utente (email, password_cifrata, nome, cognome, ruolo, telefono) VALUES
-('admin@librorama.it', SHA1('admin123'), 'Admin', 'Sistema', 'admin', '1234567890'),
+('admin@readify.it', SHA1('admin123'), 'Admin', 'Sistema', 'admin', '1234567890'),
 ('mario.rossi@email.com', SHA1('password123'), 'Mario', 'Rossi', 'registrato', '3456789012'),
 ('laura.bianchi@email.com', SHA1('password123'), 'Laura', 'Bianchi', 'registrato', '4567890123');
 

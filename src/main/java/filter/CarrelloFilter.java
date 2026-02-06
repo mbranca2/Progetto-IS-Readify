@@ -1,6 +1,11 @@
 package filter;
 
-import jakarta.servlet.*;
+import jakarta.servlet.Filter;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.FilterConfig;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.ServletRequest;
+import jakarta.servlet.ServletResponse;
 import jakarta.servlet.annotation.WebFilter;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
@@ -12,33 +17,103 @@ import java.io.IOException;
 
 @WebFilter("/*")
 public class CarrelloFilter implements Filter {
+
+    private static final String SESSION_CART = "carrello";
+    private static final String SESSION_USER = "utente";
+    private static final String SESSION_CART_USER_ID = "carrello.userId"; // marker per evitare reload DB
+    private static final String REQUEST_CART = "carrello";
+
     private CarrelloDAO carrelloDAO;
 
     @Override
     public void init(FilterConfig filterConfig) throws ServletException {
-        carrelloDAO = new CarrelloDAO();
+        this.carrelloDAO = new CarrelloDAO();
     }
 
     @Override
-    public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
+    public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
+            throws IOException, ServletException {
+
         HttpServletRequest httpRequest = (HttpServletRequest) request;
+        String path = getPath(httpRequest);
+        if (isStaticResource(path)) {
+            chain.doFilter(request, response);
+            return;
+        }
+
         HttpSession session = httpRequest.getSession(true);
 
         try {
-            if (session.getAttribute("utente") != null) {
-                Utente utente = (Utente) session.getAttribute("utente");
-                Carrello carrello = carrelloDAO.getCarrelloByUtente(utente.getIdUtente());
-                if (carrello == null) {
-                    carrello = new Carrello();
+            Utente utente = (Utente) session.getAttribute(SESSION_USER);
+
+            if (utente != null) {
+                int userId = utente.getIdUtente();
+                Carrello carrelloSession = (Carrello) session.getAttribute(SESSION_CART);
+                Integer markerUserId = (Integer) session.getAttribute(SESSION_CART_USER_ID);
+
+                if (carrelloSession == null || markerUserId == null || markerUserId != userId) {
+                    Carrello carrelloDb = carrelloDAO.getCarrelloByUtente(userId);
+                    if (carrelloDb == null) {
+                        carrelloDb = new Carrello();
+                    }
+                    session.setAttribute(SESSION_CART, carrelloDb);
+                    session.setAttribute(SESSION_CART_USER_ID, userId);
                 }
-                session.setAttribute("carrello", carrello);
-            } else if (session.getAttribute("carrello") == null) {
-                session.setAttribute("carrello", new Carrello());
+
+            } else {
+                if (session.getAttribute(SESSION_CART) == null) {
+                    session.setAttribute(SESSION_CART, new Carrello());
+                }
+                session.removeAttribute(SESSION_CART_USER_ID);
             }
-            request.setAttribute("carrello", session.getAttribute("carrello"));
+
+            request.setAttribute(REQUEST_CART, session.getAttribute(SESSION_CART));
+
         } catch (Exception e) {
             throw new ServletException("Errore durante il caricamento del carrello", e);
         }
+
         chain.doFilter(request, response);
+    }
+
+    private String getPath(HttpServletRequest req) {
+        String uri = req.getRequestURI();          // es: /Readify/css/style.css
+        String ctx = req.getContextPath();         // es: /Readify
+        return (ctx != null && !ctx.isEmpty() && uri.startsWith(ctx)) ? uri.substring(ctx.length()) : uri;
+    }
+
+    private boolean isStaticResource(String path) {
+        if (path == null) return false;
+
+        if (path.startsWith("/css/") ||
+                path.startsWith("/js/") ||
+                path.startsWith("/img/") ||
+                path.startsWith("/images/") ||
+                path.startsWith("/fonts/") ||
+                path.startsWith("/assets/") ||
+                path.startsWith("/webjars/") ||
+                path.startsWith("/vendor/")) {
+            return true;
+        }
+
+        if (path.equals("/favicon.ico") || path.equals("/robots.txt")) {
+            return true;
+        }
+
+        String lower = path.toLowerCase();
+        return lower.endsWith(".css") ||
+                lower.endsWith(".js") ||
+                lower.endsWith(".png") ||
+                lower.endsWith(".jpg") ||
+                lower.endsWith(".jpeg") ||
+                lower.endsWith(".gif") ||
+                lower.endsWith(".svg") ||
+                lower.endsWith(".webp") ||
+                lower.endsWith(".ico") ||
+                lower.endsWith(".woff") ||
+                lower.endsWith(".woff2") ||
+                lower.endsWith(".ttf") ||
+                lower.endsWith(".eot") ||
+                lower.endsWith(".map");
     }
 }
