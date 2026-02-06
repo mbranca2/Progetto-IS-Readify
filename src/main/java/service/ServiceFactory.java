@@ -14,15 +14,18 @@ import service.catalog.impl.AdminCatalogServiceImpl;
 import service.catalog.impl.CatalogServiceImpl;
 import service.catalog.impl.CategoryServiceImpl;
 import service.catalog.observer.CartConsistencyObserver;
+import service.order.AdminOrderService;
 import service.order.OrderService;
+import service.order.impl.AdminOrderServiceImpl;
 import service.order.impl.OrderServiceImpl;
+import service.review.AdminReviewService;
 import service.review.ReviewService;
+import service.review.impl.AdminReviewServiceImpl;
 import service.review.impl.ReviewServiceImpl;
 
 public class ServiceFactory {
 
-    private ServiceFactory() {
-    }
+    private ServiceFactory() {}
 
     public static AccountService accountService() {
         return new AccountServiceImpl(new UtenteDAO(), new IndirizzoDAO());
@@ -38,6 +41,10 @@ public class ServiceFactory {
 
     public static OrderService orderService() {
         return new OrderServiceImpl(new OrdineDAO(), new CarrelloDAO());
+    }
+
+    public static AdminOrderService adminOrderService() {
+        return new AdminOrderServiceImpl(new OrdineDAO(), new UtenteDAO(), new IndirizzoDAO());
     }
 
     public static AdminCatalogService adminCatalogService() {
@@ -56,5 +63,9 @@ public class ServiceFactory {
 
     public static ReviewService reviewService() {
         return new ReviewServiceImpl(new RecensioneDAO(), new OrdineDAO());
+    }
+
+    public static AdminReviewService adminReviewService() {
+        return new AdminReviewServiceImpl(new RecensioneDAO());
     }
 }

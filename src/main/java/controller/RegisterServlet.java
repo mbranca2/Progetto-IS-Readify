@@ -71,7 +71,6 @@ public class RegisterServlet extends HttpServlet {
             response.sendRedirect(request.getContextPath() + "/login?registrazione=successo");
 
         } catch (AccountServiceException e) {
-            // errore "funzionale" (es. email già registrata, indirizzo fallito, ecc.)
             request.setAttribute("erroreRegistrazione", e.getMessage());
             request.setAttribute("nome", nome);
             request.setAttribute("cognome", cognome);

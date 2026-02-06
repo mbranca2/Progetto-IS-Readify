@@ -8,18 +8,18 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import model.bean.Utente;
 import service.ServiceFactory;
-import service.order.AdminOrderService;
+import service.review.AdminReviewService;
 
 import java.io.IOException;
 
-@WebServlet("/admin/ordini")
-public class GestioneOrdiniServlet extends HttpServlet {
+@WebServlet("/admin/recensioni")
+public class GestioneRecensioniServlet extends HttpServlet {
 
-    private AdminOrderService adminOrderService;
+    private AdminReviewService adminReviewService;
 
     @Override
     public void init() throws ServletException {
-        this.adminOrderService = ServiceFactory.adminOrderService();
+        this.adminReviewService = ServiceFactory.adminReviewService();
     }
 
     @Override
@@ -31,13 +31,13 @@ public class GestioneOrdiniServlet extends HttpServlet {
             return;
         }
 
-        Utente utente = (Utente) session.getAttribute("utente");
-        if (!"admin".equals(utente.getRuolo())) {
+        Utente admin = (Utente) session.getAttribute("utente");
+        if (!"admin".equals(admin.getRuolo())) {
             resp.sendError(HttpServletResponse.SC_FORBIDDEN);
             return;
         }
 
-        req.setAttribute("ordini", adminOrderService.listAll());
-        req.getRequestDispatcher("/WEB-INF/jsp/admin/gestione-ordini.jsp").forward(req, resp);
+        req.setAttribute("reviews", adminReviewService.listAll());
+        req.getRequestDispatcher("/WEB-INF/jsp/admin/gestione-recensioni.jsp").forward(req, resp);
     }
 }

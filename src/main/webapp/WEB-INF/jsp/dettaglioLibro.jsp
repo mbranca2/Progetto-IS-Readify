@@ -17,9 +17,16 @@
            value="${descrizioneLunghezza > 160 ? descrizioneBreve.substring(0, 160) : descrizioneBreve}"/>
     <meta name="description"
           content="${not empty libro.descrizione ? descrizioneDaMostrare : 'Dettagli del libro ' += libro.titolo}">
-    <title>${libro.titolo} - Readify</title>
+    <title>${libro.titolo} - Librorama</title>
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/style.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/book-detail.css">
+    <style>
+        .review-actions { display:flex; gap:8px; margin-top:8px; }
+        .btn-small { padding:6px 10px; border-radius:10px; border:1px solid #ddd; background:#f7f7f7; cursor:pointer; }
+        .btn-danger { background:#fff3f3; border-color:#ffd4d4; }
+        .edit-form { margin-top:10px; padding:10px; border:1px solid #eee; border-radius:12px; background:#fafafa; display:none; }
+        .edit-form .form-group { margin-bottom:10px; }
+    </style>
 </head>
 <body>
 <jsp:include page="header.jsp"/>
@@ -101,6 +108,32 @@
                 </div>
             </c:if>
 
+            <!-- Feedback modifica/elimina recensione -->
+            <c:if test="${param.review_edit == 'ok'}">
+                <div class="alert alert-success" role="alert">
+                    <span>✅</span>
+                    <span>Recensione modificata con successo.</span>
+                </div>
+            </c:if>
+            <c:if test="${param.review_edit == 'ko'}">
+                <div class="alert alert-error" role="alert">
+                    <span>❌</span>
+                    <span>Impossibile modificare la recensione.</span>
+                </div>
+            </c:if>
+            <c:if test="${param.review_del == 'ok'}">
+                <div class="alert alert-success" role="alert">
+                    <span>✅</span>
+                    <span>Recensione eliminata con successo.</span>
+                </div>
+            </c:if>
+            <c:if test="${param.review_del == 'ko'}">
+                <div class="alert alert-error" role="alert">
+                    <span>❌</span>
+                    <span>Impossibile eliminare la recensione.</span>
+                </div>
+            </c:if>
+
             <div class="book-details">
                 <h3>Descrizione</h3>
                 <p>${not empty libro.descrizione ? libro.descrizione : 'Nessuna descrizione disponibile per questo libro.'}</p>
@@ -126,21 +159,14 @@
 
                 <!-- Form inserimento recensione -->
                 <c:choose>
-                    <!-- Non loggato -->
                     <c:when test="${empty sessionScope.utente}">
-                        <p class="no-reviews">
-                            Per lasciare una recensione devi effettuare il login.
-                        </p>
+                        <p class="no-reviews">Per lasciare una recensione devi effettuare il login.</p>
                     </c:when>
 
-                    <!-- Loggato ma NON ha acquistato: non mostrare form -->
                     <c:when test="${not empty sessionScope.utente && (empty canReview || canReview == false)}">
-                        <p class="no-reviews">
-                            Per lasciare una recensione devi aver acquistato questo libro.
-                        </p>
+                        <p class="no-reviews">Per lasciare una recensione devi aver acquistato questo libro.</p>
                     </c:when>
 
-                    <!-- Loggato e ha acquistato: mostra form -->
                     <c:otherwise>
                         <div class="review-form-container">
                             <form action="${pageContext.request.contextPath}/recensioni/aggiungi" method="post">
@@ -177,7 +203,7 @@
                     <c:when test="${not empty recensioni}">
                         <div class="reviews-container">
                             <c:forEach items="${recensioni}" var="r">
-                                <div class="review-card">
+                                <div class="review-card" id="review-${r.idRecensione}">
                                     <div class="review-header">
                                         <span class="reviewer-name">${r.nomeUtente}</span>
                                         <div class="rating">
@@ -189,7 +215,56 @@
                                             <fmt:formatDate value="${r.dataRecensione}" pattern="dd/MM/yyyy"/>
                                         </span>
                                     </div>
+
                                     <p class="review-comment">${r.commento}</p>
+
+                                    <!-- Azioni: SOLO autore recensione -->
+                                    <c:if test="${not empty sessionScope.utente && sessionScope.utente.idUtente == r.idUtente}">
+                                        <div class="review-actions">
+                                            <button type="button" class="btn-small"
+                                                    onclick="toggleEdit(${r.idRecensione})">
+                                                ✏️ Modifica
+                                            </button>
+
+                                            <form action="${pageContext.request.contextPath}/recensioni/elimina" method="post"
+                                                  onsubmit="return confirm('Vuoi eliminare questa recensione?');">
+                                                <input type="hidden" name="idRecensione" value="${r.idRecensione}">
+                                                <input type="hidden" name="idLibro" value="${libro.idLibro}">
+                                                <button type="submit" class="btn-small btn-danger">🗑️ Elimina</button>
+                                            </form>
+                                        </div>
+
+                                        <div class="edit-form" id="edit-form-${r.idRecensione}">
+                                            <form action="${pageContext.request.contextPath}/recensioni/modifica" method="post">
+                                                <input type="hidden" name="idRecensione" value="${r.idRecensione}">
+                                                <input type="hidden" name="idLibro" value="${libro.idLibro}">
+
+                                                <div class="form-group">
+                                                    <label>Valutazione</label>
+                                                    <select name="voto" required>
+                                                        <option value="5" ${r.voto == 5 ? 'selected' : ''}>★★★★★ (5)</option>
+                                                        <option value="4" ${r.voto == 4 ? 'selected' : ''}>★★★★☆ (4)</option>
+                                                        <option value="3" ${r.voto == 3 ? 'selected' : ''}>★★★☆☆ (3)</option>
+                                                        <option value="2" ${r.voto == 2 ? 'selected' : ''}>★★☆☆☆ (2)</option>
+                                                        <option value="1" ${r.voto == 1 ? 'selected' : ''}>★☆☆☆☆ (1)</option>
+                                                    </select>
+                                                </div>
+
+                                                <div class="form-group">
+                                                    <label>Commento</label>
+                                                    <textarea name="commento" rows="4" maxlength="2000">${r.commento}</textarea>
+                                                </div>
+
+                                                <div class="review-actions">
+                                                    <button type="submit" class="btn-small">Salva</button>
+                                                    <button type="button" class="btn-small"
+                                                            onclick="toggleEdit(${r.idRecensione})">
+                                                        Annulla
+                                                    </button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </c:if>
                                 </div>
                             </c:forEach>
                         </div>
@@ -207,57 +282,11 @@
 <jsp:include page="footer.jsp"/>
 
 <script>
-    function addToCart(bookId, quantity) {
-        const xhr = new XMLHttpRequest();
-        const formData = new FormData();
-
-        formData.append('azione', 'aggiungi');
-        formData.append('idLibro', bookId);
-        formData.append('quantita', quantity);
-
-        xhr.open('POST', '${pageContext.request.contextPath}/carrello', true);
-        xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
-
-        xhr.onload = function() {
-            if (xhr.status === 200) {
-                try {
-                    const res = JSON.parse(xhr.responseText);
-                    if (res.success) {
-                        showAddToCartFeedback(res.message || 'Prodotto aggiunto al carrello!');
-                        const cartCount = document.querySelector('.cart-count');
-                        if (cartCount && typeof res.totaleArticoli !== 'undefined') {
-                            cartCount.textContent = res.totaleArticoli;
-                        }
-                    } else {
-                        alert(res.message || 'Impossibile aggiungere il prodotto al carrello.');
-                    }
-                } catch (e) {
-                    showAddToCartFeedback('Prodotto aggiunto al carrello!');
-                }
-            } else {
-                alert('Si è verificato un errore durante l\'aggiunta al carrello.');
-            }
-        };
-
-        xhr.send(formData);
-    }
-
-    function showAddToCartFeedback(message) {
-        const feedback = document.createElement('div');
-        feedback.className = 'cart-feedback';
-        feedback.textContent = message || 'Prodotto aggiunto al carrello!';
-
-        document.body.appendChild(feedback);
-
-        void feedback.offsetWidth;
-        feedback.classList.add('show');
-
-        setTimeout(() => {
-            feedback.classList.remove('show');
-            setTimeout(() => feedback.remove(), 300);
-        }, 3000);
+    function toggleEdit(idRec) {
+        const el = document.getElementById('edit-form-' + idRec);
+        if (!el) return;
+        el.style.display = (el.style.display === 'none' || el.style.display === '') ? 'block' : 'none';
     }
 </script>
-
 </body>
 </html>

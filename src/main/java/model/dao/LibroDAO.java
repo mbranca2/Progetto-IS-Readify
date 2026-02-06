@@ -3,6 +3,7 @@ package model.dao;
 import model.bean.Libro;
 import utils.DBManager;
 
+import java.math.BigDecimal;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -31,8 +32,6 @@ public class LibroDAO {
                     try (ResultSet rs = stmt.getGeneratedKeys()) {
                         if (rs.next()) {
                             libro.setIdLibro(rs.getInt(1));
-
-                            // Inserimento categorie nella STESSA transazione/connessione
                             inserisciCategorieLibro(conn, libro.getIdLibro(), libro.getCategorie());
                         }
                     }
@@ -160,14 +159,16 @@ public class LibroDAO {
     }
 
     public List<Libro> trovaLibriConFiltro(String titolo, String autore, String categoriaId, int offset, int limit) {
+        return trovaLibriConFiltro(titolo, autore, categoriaId, null, null, offset, limit);
+    }
+
+    public List<Libro> trovaLibriConFiltro(String titolo, String autore, String categoriaId, BigDecimal prezzoMin, BigDecimal prezzoMax, int offset, int limit) {
         List<Libro> libri = new ArrayList<>();
         String query = "SELECT DISTINCT l.* FROM Libro l ";
-        System.out.println("[LibroDAO] Parametri ricerca - titolo: " + titolo + ", autore: " + autore + ", categoriaId: " + categoriaId);
 
         if (categoriaId != null && !categoriaId.trim().isEmpty()) {
             query += " INNER JOIN LibroCategoria lc ON l.id_libro = lc.id_libro ";
             query += " WHERE lc.id_categoria = ? ";
-            System.out.println("[LibroDAO] Aggiunto filtro per categoria ID: " + categoriaId);
         } else {
             query += " WHERE 1=1 ";
         }
@@ -178,17 +179,24 @@ public class LibroDAO {
         if (autore != null && !autore.trim().isEmpty()) {
             query += " AND LOWER(l.autore) LIKE LOWER(?) ";
         }
+        if (prezzoMin != null) {
+            query += " AND l.prezzo >= ? ";
+        }
+        if (prezzoMax != null) {
+            query += " AND l.prezzo <= ? ";
+        }
+
         query += " ORDER BY l.titolo LIMIT ? OFFSET ?";
-        System.out.println("[LibroDAO] Query generata: " + query);
 
         try (Connection conn = DBManager.getConnection();
              PreparedStatement stmt = conn.prepareStatement(query)) {
+
             int paramIndex = 1;
+
             if (categoriaId != null && !categoriaId.trim().isEmpty()) {
                 try {
                     int idCategoria = Integer.parseInt(categoriaId);
                     stmt.setInt(paramIndex++, idCategoria);
-                    System.out.println("[LibroDAO] Impostato parametro categoria: " + idCategoria);
                 } catch (NumberFormatException e) {
                     System.err.println("[LibroDAO] Errore nel formato dell'ID categoria: " + categoriaId);
                 }
@@ -201,8 +209,18 @@ public class LibroDAO {
             if (autore != null && !autore.trim().isEmpty()) {
                 stmt.setString(paramIndex++, "%" + autore + "%");
             }
+
+            if (prezzoMin != null) {
+                stmt.setBigDecimal(paramIndex++, prezzoMin);
+            }
+
+            if (prezzoMax != null) {
+                stmt.setBigDecimal(paramIndex++, prezzoMax);
+            }
+
             stmt.setInt(paramIndex++, limit);
             stmt.setInt(paramIndex, offset);
+
             ResultSet rs = stmt.executeQuery();
             while (rs.next()) {
                 libri.add(mappaRisultatoALibro(rs));
@@ -214,6 +232,10 @@ public class LibroDAO {
     }
 
     public int contaLibriConFiltro(String titolo, String autore, String categoriaId) {
+        return contaLibriConFiltro(titolo, autore, categoriaId, null, null);
+    }
+
+    public int contaLibriConFiltro(String titolo, String autore, String categoriaId, BigDecimal prezzoMin, BigDecimal prezzoMax) {
         String query = "SELECT COUNT(DISTINCT l.id_libro) FROM Libro l ";
 
         if (categoriaId != null && !categoriaId.trim().isEmpty()) {
@@ -231,9 +253,19 @@ public class LibroDAO {
             query += " AND LOWER(l.autore) LIKE LOWER(?) ";
         }
 
+        if (prezzoMin != null) {
+            query += " AND l.prezzo >= ? ";
+        }
+
+        if (prezzoMax != null) {
+            query += " AND l.prezzo <= ? ";
+        }
+
         try (Connection conn = DBManager.getConnection();
              PreparedStatement stmt = conn.prepareStatement(query)) {
+
             int paramIndex = 1;
+
             if (categoriaId != null && !categoriaId.trim().isEmpty()) {
                 try {
                     int idCategoria = Integer.parseInt(categoriaId);
@@ -250,6 +282,15 @@ public class LibroDAO {
             if (autore != null && !autore.trim().isEmpty()) {
                 stmt.setString(paramIndex++, "%" + autore + "%");
             }
+
+            if (prezzoMin != null) {
+                stmt.setBigDecimal(paramIndex++, prezzoMin);
+            }
+
+            if (prezzoMax != null) {
+                stmt.setBigDecimal(paramIndex++, prezzoMax);
+            }
+
             ResultSet rs = stmt.executeQuery();
             if (rs.next()) {
                 return rs.getInt(1);

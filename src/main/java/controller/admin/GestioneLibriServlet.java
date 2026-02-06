@@ -59,17 +59,22 @@ public class GestioneLibriServlet extends HttpServlet {
         String autore = trimToNull(req.getParameter("autore"));
         String categoria = trimToNull(req.getParameter("categoria"));
 
+        BigDecimal prezzoMin = parseBigDecimalSafe(req.getParameter("prezzoMin"));
+        BigDecimal prezzoMax = parseBigDecimalSafe(req.getParameter("prezzoMax"));
+
         int pagina = parseIntSafe(req.getParameter("pagina"), 1);
         int elementiPerPagina = 10;
 
         List<Libro> libri;
         int totalePagine = 1;
 
-        if (titolo == null && autore == null && categoria == null) {
+        boolean nessunFiltro = (titolo == null && autore == null && categoria == null && prezzoMin == null && prezzoMax == null);
+
+        if (nessunFiltro) {
             libri = catalogService.listAll();
         } else {
-            libri = catalogService.search(titolo, autore, categoria, pagina, elementiPerPagina);
-            int totale = catalogService.count(titolo, autore, categoria);
+            libri = catalogService.search(titolo, autore, categoria, prezzoMin, prezzoMax, pagina, elementiPerPagina);
+            int totale = catalogService.count(titolo, autore, categoria, prezzoMin, prezzoMax);
             totalePagine = (int) Math.ceil((double) totale / elementiPerPagina);
 
             req.setAttribute("totalePagine", totalePagine);
@@ -77,9 +82,14 @@ public class GestioneLibriServlet extends HttpServlet {
         }
 
         req.setAttribute("libri", libri);
-        session.setAttribute("titolo", titolo);
-        session.setAttribute("autore", autore);
-        session.setAttribute("categoria", categoria);
+
+        if (session != null) {
+            session.setAttribute("titolo", titolo);
+            session.setAttribute("autore", autore);
+            session.setAttribute("categoria", categoria);
+            session.setAttribute("prezzoMin", (prezzoMin != null) ? prezzoMin.toPlainString() : null);
+            session.setAttribute("prezzoMax", (prezzoMax != null) ? prezzoMax.toPlainString() : null);
+        }
 
         req.getRequestDispatcher("/WEB-INF/jsp/admin/gestione-libri.jsp").forward(req, resp);
     }
@@ -108,7 +118,6 @@ public class GestioneLibriServlet extends HttpServlet {
 
             if (!ok) {
                 request.setAttribute("errore", "Impossibile inserire il libro. Verifica i dati.");
-                // Ricarico categorie per la JSP
                 request.setAttribute("categorie", categoryService.listAll());
                 request.getRequestDispatcher("/WEB-INF/jsp/admin/inserisciLibro.jsp").forward(request, response);
                 return;
@@ -199,23 +208,21 @@ public class GestioneLibriServlet extends HttpServlet {
 
         String disp = trimToNull(request.getParameter("disponibilita"));
         if (disp != null) {
-            int d = parseIntSafe(disp, libro.getDisponibilita());
-            libro.setDisponibilita(Math.max(0, d));
+            int d = parseIntSafe(disp, -1);
+            if (d >= 0) libro.setDisponibilita(d);
         }
 
         String isbn = trimToNull(request.getParameter("isbn"));
         if (isbn != null) libro.setIsbn(isbn);
 
-        String descrizione = trimToNull(request.getParameter("descrizione"));
-        if (descrizione != null) libro.setDescrizione(descrizione);
+        String descr = trimToNull(request.getParameter("descrizione"));
+        if (descr != null) libro.setDescrizione(descr);
 
-        String copertina = trimToNull(request.getParameter("copertina"));
-        if (copertina != null) libro.setCopertina(copertina);
+        String cop = trimToNull(request.getParameter("copertina"));
+        if (cop != null) libro.setCopertina(cop);
     }
 
     private void applyCategorieFromRequest(Libro libro, HttpServletRequest request) {
-        if (libro == null) return;
-
         String[] categorieMultiple = request.getParameterValues("categorie");
         if (categorieMultiple != null && categorieMultiple.length > 0) {
             libro.setCategorie(new ArrayList<>());
@@ -241,10 +248,12 @@ public class GestioneLibriServlet extends HttpServlet {
         String titolo = (session != null) ? (String) session.getAttribute("titolo") : null;
         String autore = (session != null) ? (String) session.getAttribute("autore") : null;
         String categoria = (session != null) ? (String) session.getAttribute("categoria") : null;
+        String prezzoMin = (session != null) ? (String) session.getAttribute("prezzoMin") : null;
+        String prezzoMax = (session != null) ? (String) session.getAttribute("prezzoMax") : null;
 
         StringBuilder url = new StringBuilder(request.getContextPath() + "/admin/libri");
 
-        if (titolo != null || autore != null || categoria != null) {
+        if (titolo != null || autore != null || categoria != null || prezzoMin != null || prezzoMax != null) {
             url.append("?");
             boolean first = true;
 
@@ -260,6 +269,16 @@ public class GestioneLibriServlet extends HttpServlet {
             if (categoria != null) {
                 if (!first) url.append("&");
                 url.append("categoria=").append(encode(categoria));
+                first = false;
+            }
+            if (prezzoMin != null) {
+                if (!first) url.append("&");
+                url.append("prezzoMin=").append(encode(prezzoMin));
+                first = false;
+            }
+            if (prezzoMax != null) {
+                if (!first) url.append("&");
+                url.append("prezzoMax=").append(encode(prezzoMax));
             }
         }
 
@@ -286,5 +305,17 @@ public class GestioneLibriServlet extends HttpServlet {
 
     private String trimToEmpty(String s) {
         return (s == null) ? "" : s.trim();
+    }
+
+    private BigDecimal parseBigDecimalSafe(String s) {
+        if (s == null) return null;
+        String x = s.trim();
+        if (x.isEmpty()) return null;
+        x = x.replace(",", ".");
+        try {
+            return new BigDecimal(x);
+        } catch (Exception e) {
+            return null;
+        }
     }
 }

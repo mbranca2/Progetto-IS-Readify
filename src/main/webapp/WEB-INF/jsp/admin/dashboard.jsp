@@ -19,6 +19,7 @@
         }
         .icon-users::before { content: '👥'; }
         .icon-book::before { content: '📚'; }
+        .icon-orders::before { content: '🧾'; }
         .icon-user-shield::before { content: '🛡️'; }
         .icon-arrow-right::before { content: '→'; }
         .icon-home::before { content: '🏠'; }
@@ -40,39 +41,64 @@
         </div>
     </div>
 
-    <!-- Statistiche -->
+    <!-- Azioni / Statistiche -->
     <div class="dashboard-stats">
+
         <!-- Utenti Registrati -->
         <div class="stat-card">
             <div class="stat-icon users">
                 <span class="icon icon-users"></span>
             </div>
             <div class="stat-content">
-                <div class="stat-value">${stats.numeroUtenti}</div>
+                <div class="stat-value">
+                    <c:choose>
+                        <c:when test="${not empty stats && not empty stats.numeroUtenti}">${stats.numeroUtenti}</c:when>
+                        <c:otherwise>&mdash;</c:otherwise>
+                    </c:choose>
+                </div>
                 <div class="stat-label">Utenti Registrati</div>
                 <a href="${pageContext.request.contextPath}/admin/utenti" class="stat-link">
                     Visualizza utenti <span class="icon icon-arrow-right"></span>
                 </a>
             </div>
         </div>
-        
+
         <!-- Libri in Catalogo -->
         <div class="stat-card">
             <div class="stat-icon books">
                 <span class="icon icon-book"></span>
             </div>
             <div class="stat-content">
-                <div class="stat-value">${stats.numeroLibri}</div>
+                <div class="stat-value">
+                    <c:choose>
+                        <c:when test="${not empty stats && not empty stats.numeroLibri}">${stats.numeroLibri}</c:when>
+                        <c:otherwise>&mdash;</c:otherwise>
+                    </c:choose>
+                </div>
                 <div class="stat-label">Libri in Catalogo</div>
                 <a href="${pageContext.request.contextPath}/admin/libri" class="stat-link">
                     Gestisci libri <span class="icon icon-arrow-right"></span>
                 </a>
             </div>
         </div>
+
+        <!-- Ordini -->
+        <div class="stat-card">
+            <div class="stat-icon orders">
+                <span class="icon icon-orders"></span>
+            </div>
+            <div class="stat-content">
+                <div class="stat-value">&mdash;</div>
+                <div class="stat-label">Ordini Piattaforma</div>
+                <a href="${pageContext.request.contextPath}/admin/ordini" class="stat-link">
+                    Gestisci ordini <span class="icon icon-arrow-right"></span>
+                </a>
+            </div>
+        </div>
+
     </div>
 </div>
 </body>
-
 
 <jsp:include page="../footer.jsp" />
 

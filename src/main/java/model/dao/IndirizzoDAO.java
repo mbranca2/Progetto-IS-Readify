@@ -38,6 +38,32 @@ public class IndirizzoDAO {
         return false;
     }
 
+    // ✅ Overload per transazioni (stessa insert ma usa conn esterna)
+    public boolean inserisciIndirizzo(Connection conn, Indirizzo indirizzo) throws SQLException {
+        String query = "INSERT INTO Indirizzo (id_utente, via, cap, citta, provincia, paese) VALUES (?, ?, ?, ?, ?, ?)";
+
+        try (PreparedStatement stmt = conn.prepareStatement(query, Statement.RETURN_GENERATED_KEYS)) {
+
+            stmt.setInt(1, indirizzo.getIdUtente());
+            stmt.setString(2, indirizzo.getVia());
+            stmt.setString(3, indirizzo.getCap());
+            stmt.setString(4, indirizzo.getCitta());
+            stmt.setString(5, indirizzo.getProvincia());
+            stmt.setString(6, indirizzo.getPaese() != null ? indirizzo.getPaese() : "Italia");
+
+            int righeInserite = stmt.executeUpdate();
+            if (righeInserite > 0) {
+                try (ResultSet rs = stmt.getGeneratedKeys()) {
+                    if (rs.next()) {
+                        indirizzo.setIdIndirizzo(rs.getInt(1));
+                    }
+                }
+                return true;
+            }
+            return false;
+        }
+    }
+
     public Indirizzo trovaIndirizzoPerId(int id) {
         String query = "SELECT * FROM Indirizzo WHERE id_indirizzo = ?";
 

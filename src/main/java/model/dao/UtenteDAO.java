@@ -38,6 +38,42 @@ public class UtenteDAO {
         }
     }
 
+    // ✅ Overload per transazioni (stessa insert ma usa conn esterna)
+    public boolean inserisciUtente(Connection conn, Utente utente) throws SQLException {
+        String query = "INSERT INTO Utente (email, password_cifrata, nome, cognome, ruolo, telefono) VALUES (?, ?, ?, ?, ?, ?)";
+        try (PreparedStatement stmt = conn.prepareStatement(query, Statement.RETURN_GENERATED_KEYS)) {
+
+            stmt.setString(1, utente.getEmail());
+            stmt.setString(2, utente.getPasswordCifrata());
+            stmt.setString(3, utente.getNome());
+            stmt.setString(4, utente.getCognome());
+            stmt.setString(5, utente.getRuolo());
+            stmt.setString(6, utente.getTelefono());
+
+            int righeInserite = stmt.executeUpdate();
+            if (righeInserite > 0) {
+                try (ResultSet rs = stmt.getGeneratedKeys()) {
+                    if (rs.next()) {
+                        utente.setIdUtente(rs.getInt(1));
+                    }
+                }
+                return true;
+            }
+            return false;
+        }
+    }
+
+    // ✅ Check duplicato email (in conn transazionale)
+    public boolean emailEsistente(Connection conn, String email) throws SQLException {
+        String sql = "SELECT 1 FROM Utente WHERE email = ? LIMIT 1";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, email);
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next();
+            }
+        }
+    }
+
     public Utente trovaUtentePerId(int id) {
         String query = "SELECT * FROM Utente WHERE id_utente = ?";
 

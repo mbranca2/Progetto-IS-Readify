@@ -47,19 +47,18 @@ public class ReviewServiceImpl implements ReviewService {
 
         int voto = recensione.getVoto();
         if (voto < 1 || voto > 5) return false;
-
-        // RF_REC_1: recensione consentita solo se il libro è stato acquistato dall'utente
         if (!canUserReview(idUtente, idLibro)) {
+            return false;
+        }
+
+        if (recensioneDAO.trovaRecensionePerUtenteELibro(idUtente, idLibro) != null) {
             return false;
         }
 
         String commento = recensione.getCommento();
         if (commento == null) commento = "";
         commento = commento.trim();
-
-        if (commento.length() > 2000) {
-            commento = commento.substring(0, 2000);
-        }
+        if (commento.length() > 2000) commento = commento.substring(0, 2000);
         recensione.setCommento(commento);
 
         try {
@@ -67,5 +66,39 @@ public class ReviewServiceImpl implements ReviewService {
         } catch (Exception e) {
             return false;
         }
+    }
+
+    @Override
+    public boolean updateReview(int idRecensione, int idUtente, int voto, String commento) {
+        if (idRecensione <= 0 || idUtente <= 0) return false;
+        if (voto < 1 || voto > 5) return false;
+
+        Recensione existing = recensioneDAO.trovaRecensionePerId(idRecensione);
+        if (existing == null) return false;
+
+        // Solo proprietario
+        if (existing.getIdUtente() != idUtente) return false;
+
+        // Coerenza RF: deve aver acquistato quel libro (stessa regola del create)
+        if (!canUserReview(idUtente, existing.getIdLibro())) return false;
+
+        if (commento == null) commento = "";
+        commento = commento.trim();
+        if (commento.length() > 2000) commento = commento.substring(0, 2000);
+
+        return recensioneDAO.aggiornaRecensione(idRecensione, idUtente, voto, commento);
+    }
+
+    @Override
+    public boolean deleteReview(int idRecensione, int idUtente) {
+        if (idRecensione <= 0 || idUtente <= 0) return false;
+
+        Recensione existing = recensioneDAO.trovaRecensionePerId(idRecensione);
+        if (existing == null) return false;
+
+        // Solo proprietario
+        if (existing.getIdUtente() != idUtente) return false;
+
+        return recensioneDAO.eliminaRecensione(idRecensione, idUtente);
     }
 }

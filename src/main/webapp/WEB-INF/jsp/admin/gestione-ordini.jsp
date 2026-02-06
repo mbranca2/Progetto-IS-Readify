@@ -51,6 +51,13 @@
         .muted {
             color: #666;
         }
+
+        .btn-link {
+            text-decoration: none;
+            padding: 6px 10px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
     </style>
 </head>
 <body>
@@ -73,13 +80,14 @@
                         <th>Data</th>
                         <th>Stato</th>
                         <th>Totale</th>
+                        <th>Azioni</th>
                     </tr>
                     </thead>
                     <tbody>
                     <c:choose>
                         <c:when test="${empty ordini}">
                             <tr>
-                                <td colspan="5" class="muted">Nessun ordine presente.</td>
+                                <td colspan="6" class="muted">Nessun ordine presente.</td>
                             </tr>
                         </c:when>
                         <c:otherwise>
@@ -104,6 +112,12 @@
                                             </c:when>
                                             <c:otherwise>€ 0,00</c:otherwise>
                                         </c:choose>
+                                    </td>
+                                    <td>
+                                        <a class="btn-link"
+                                           href="${pageContext.request.contextPath}/admin/ordine?id=${o.idOrdine}">
+                                            Dettaglio
+                                        </a>
                                     </td>
                                 </tr>
                             </c:forEach>

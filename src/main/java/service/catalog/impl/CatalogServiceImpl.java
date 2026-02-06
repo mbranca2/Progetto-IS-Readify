@@ -4,6 +4,7 @@ import model.bean.Libro;
 import model.dao.LibroDAO;
 import service.catalog.CatalogService;
 
+import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
@@ -26,7 +27,7 @@ public class CatalogServiceImpl implements CatalogService {
     }
 
     @Override
-    public List<Libro> search(String titolo, String autore, String categoriaId, int page, int pageSize) {
+    public List<Libro> search(String titolo, String autore, String categoriaId, BigDecimal prezzoMin, BigDecimal prezzoMax, int page, int pageSize) {
         try {
             int safePage = Math.max(page, 1);
             int safePageSize = Math.max(pageSize, 1);
@@ -36,7 +37,7 @@ public class CatalogServiceImpl implements CatalogService {
             String a = normalize(autore);
             String c = normalize(categoriaId);
 
-            return libroDAO.trovaLibriConFiltro(t, a, c, offset, safePageSize);
+            return libroDAO.trovaLibriConFiltro(t, a, c, prezzoMin, prezzoMax, offset, safePageSize);
 
         } catch (Exception e) {
             return Collections.emptyList();
@@ -44,12 +45,12 @@ public class CatalogServiceImpl implements CatalogService {
     }
 
     @Override
-    public int count(String titolo, String autore, String categoriaId) {
+    public int count(String titolo, String autore, String categoriaId, BigDecimal prezzoMin, BigDecimal prezzoMax) {
         try {
             String t = normalize(titolo);
             String a = normalize(autore);
             String c = normalize(categoriaId);
-            return libroDAO.contaLibriConFiltro(t, a, c);
+            return libroDAO.contaLibriConFiltro(t, a, c, prezzoMin, prezzoMax);
         } catch (Exception e) {
             return 0;
         }

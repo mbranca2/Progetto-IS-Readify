@@ -9,6 +9,8 @@ public interface AccountService {
 
     Utente login(String email, String password);
 
+    boolean register(RegistrationData data) throws AccountServiceException;
+
     boolean register(Utente utente);
 
     List<Indirizzo> listAddresses(int idUtente);

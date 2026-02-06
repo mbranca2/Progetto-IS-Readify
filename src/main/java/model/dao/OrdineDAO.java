@@ -147,18 +147,14 @@ public class OrdineDAO {
 
     public List<Ordine> trovaTuttiOrdini() {
         List<Ordine> ordini = new ArrayList<>();
-
-        String sql = "SELECT o.* " +
-                "FROM Ordine o " +
-                "ORDER BY o.data_ordine DESC";
+        String sql = "SELECT * FROM Ordine ORDER BY data_ordine DESC";
 
         try (Connection conn = DBManager.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql);
              ResultSet rs = stmt.executeQuery()) {
 
             while (rs.next()) {
-                Ordine ordine = mappaOrdineDaResultSet(rs);
-                ordini.add(ordine);
+                ordini.add(mappaOrdineDaResultSet(rs));
             }
 
         } catch (SQLException e) {
@@ -168,23 +164,44 @@ public class OrdineDAO {
         return ordini;
     }
 
-    public Ordine findById(Connection conn, int idOrdine) throws SQLException {
+    public Ordine trovaOrdinePerIdConDettagli(int idOrdine) {
+        if (idOrdine <= 0) return null;
+
         String sql = "SELECT * FROM Ordine WHERE id_ordine = ?";
-        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+        try (Connection conn = DBManager.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
             stmt.setInt(1, idOrdine);
             try (ResultSet rs = stmt.executeQuery()) {
                 if (!rs.next()) return null;
-                Ordine o = new Ordine();
-                o.setIdOrdine(rs.getInt("id_ordine"));
-                o.setIdUtente(rs.getInt("id_utente"));
-                int idInd = rs.getInt("id_indirizzo");
-                if (!rs.wasNull()) o.setIdIndirizzo(idInd);
-                o.setTotale(rs.getBigDecimal("totale"));
-                o.setStato(StatoOrdine.fromDbValue(rs.getString("stato")));
-                Timestamp ts = rs.getTimestamp("data_ordine");
-                o.setDataOrdine(ts != null ? new Date(ts.getTime()) : null);
-                return o;
+
+                Ordine ordine = mappaOrdineDaResultSet(rs);
+                caricaDettagliOrdine(ordine, conn);
+                return ordine;
             }
+
+        } catch (SQLException e) {
+            logger.log(Level.SEVERE, "Errore durante il recupero ordine con dettagli (admin). idOrdine=" + idOrdine, e);
+            return null;
+        }
+    }
+
+    public boolean aggiornaStatoOrdine(int idOrdine, StatoOrdine nuovoStato) {
+        if (idOrdine <= 0 || nuovoStato == null) return false;
+
+        String sql = "UPDATE Ordine SET stato = ? WHERE id_ordine = ?";
+
+        try (Connection conn = DBManager.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setString(1, nuovoStato.toDbValue());
+            stmt.setInt(2, idOrdine);
+            return stmt.executeUpdate() > 0;
+
+        } catch (SQLException e) {
+            logger.log(Level.SEVERE, "Errore durante aggiornamento stato ordine. idOrdine=" + idOrdine, e);
+            return false;
         }
     }
 
@@ -222,16 +239,10 @@ public class OrdineDAO {
         ordine.setStato(StatoOrdine.fromDbValue(rs.getString("stato")));
         ordine.setTotale(rs.getBigDecimal("totale"));
 
-        try {
-            if (hasColumn(rs, "id_utente")) {
-                ordine.setIdUtente(rs.getInt("id_utente"));
-            }
-            if (hasColumn(rs, "id_indirizzo") && !rs.wasNull()) {
-                ordine.setIdIndirizzo(rs.getInt("id_indirizzo"));
-            }
-        } catch (SQLException e) {
-            logger.log(Level.FINE, "Errore durante il mapping dei dettagli aggiuntivi", e);
-        }
+        ordine.setIdUtente(rs.getInt("id_utente"));
+        int idInd = rs.getInt("id_indirizzo");
+        if (!rs.wasNull()) ordine.setIdIndirizzo(idInd);
+
         return ordine;
     }
 
@@ -243,35 +254,19 @@ public class OrdineDAO {
         dettaglio.setQuantita(rs.getInt("quantita"));
         dettaglio.setPrezzoUnitario(rs.getBigDecimal("prezzo_unitario"));
 
-        try {
-            if (hasColumn(rs, "titolo")) dettaglio.setTitoloLibro(rs.getString("titolo"));
-            if (hasColumn(rs, "autore")) dettaglio.setAutoreLibro(rs.getString("autore"));
-            if (hasColumn(rs, "isbn")) dettaglio.setIsbnLibro(rs.getString("isbn"));
+        dettaglio.setTitoloLibro(rs.getString("titolo"));
+        dettaglio.setAutoreLibro(rs.getString("autore"));
+        dettaglio.setIsbnLibro(rs.getString("isbn"));
 
-            if (hasColumn(rs, "immagine_copertina")) {
-                String copertina = rs.getString("immagine_copertina");
-                if (copertina != null && !copertina.trim().isEmpty()) {
-                    if (!copertina.startsWith("img/libri/copertine/")) {
-                        copertina = "img/libri/copertine/" + copertina;
-                    }
-                    dettaglio.setImmagineCopertina(copertina);
-                }
+        String copertina = rs.getString("immagine_copertina");
+        if (copertina != null && !copertina.trim().isEmpty()) {
+            if (!copertina.startsWith("img/libri/copertine/")) {
+                copertina = "img/libri/copertine/" + copertina;
             }
-        } catch (SQLException e) {
-            logger.log(Level.WARNING, "Errore durante il mapping dei dettagli aggiuntivi", e);
+            dettaglio.setImmagineCopertina(copertina);
         }
+
         return dettaglio;
-    }
-
-    private boolean hasColumn(ResultSet rs, String columnName) throws SQLException {
-        ResultSetMetaData meta = rs.getMetaData();
-        int columns = meta.getColumnCount();
-        for (int x = 1; x <= columns; x++) {
-            if (columnName.equalsIgnoreCase(meta.getColumnName(x))) {
-                return true;
-            }
-        }
-        return false;
     }
 
     private void caricaDettagliOrdine(Ordine ordine, Connection conn) throws SQLException {
