@@ -16,6 +16,7 @@ import service.catalog.CategoryService;
 
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 
 @WebServlet("/admin/libri")
@@ -101,11 +102,14 @@ public class GestioneLibriServlet extends HttpServlet {
         if ("aggiungi".equals(azione)) {
             Libro libro = new Libro();
             setLibroPropertiesFromRequestForInsert(libro, request);
+            applyCategorieFromRequest(libro, request);
 
             boolean ok = adminCatalogService.addBook(libro);
 
             if (!ok) {
                 request.setAttribute("errore", "Impossibile inserire il libro. Verifica i dati.");
+                // Ricarico categorie per la JSP
+                request.setAttribute("categorie", categoryService.listAll());
                 request.getRequestDispatcher("/WEB-INF/jsp/admin/inserisciLibro.jsp").forward(request, response);
                 return;
             }
@@ -128,6 +132,7 @@ public class GestioneLibriServlet extends HttpServlet {
             }
 
             applyLibroUpdateFromRequest(libro, request);
+            applyCategorieFromRequest(libro, request);
 
             boolean ok = adminCatalogService.updateBook(libro);
             if (!ok) {
@@ -208,6 +213,29 @@ public class GestioneLibriServlet extends HttpServlet {
         if (copertina != null) libro.setCopertina(copertina);
     }
 
+    private void applyCategorieFromRequest(Libro libro, HttpServletRequest request) {
+        if (libro == null) return;
+
+        String[] categorieMultiple = request.getParameterValues("categorie");
+        if (categorieMultiple != null && categorieMultiple.length > 0) {
+            libro.setCategorie(new ArrayList<>());
+            for (String c : categorieMultiple) {
+                int idCat = parseIntSafe(c, -1);
+                if (idCat > 0) libro.aggiungiCategoria(idCat);
+            }
+            return;
+        }
+
+        String categoriaSingola = trimToNull(request.getParameter("categoria"));
+        if (categoriaSingola != null) {
+            int idCat = parseIntSafe(categoriaSingola, -1);
+            if (idCat > 0) {
+                libro.setCategorie(new ArrayList<>());
+                libro.aggiungiCategoria(idCat);
+            }
+        }
+    }
+
     private String buildRedirectToAdminLibriWithFilters(HttpServletRequest request) {
         HttpSession session = request.getSession(false);
         String titolo = (session != null) ? (String) session.getAttribute("titolo") : null;
@@ -239,7 +267,7 @@ public class GestioneLibriServlet extends HttpServlet {
     }
 
     private String encode(String s) {
-        return s.replace(" ", "%20"); // semplice e sufficiente per i tuoi filtri base
+        return s.replace(" ", "%20");
     }
 
     private int parseIntSafe(String s, int def) {

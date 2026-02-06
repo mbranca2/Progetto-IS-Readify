@@ -7,22 +7,27 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import model.bean.Carrello;
-import model.bean.Indirizzo;
 import model.bean.Ordine;
 import model.bean.Utente;
-import model.dao.IndirizzoDAO;
 import service.ServiceFactory;
+import service.address.AddressService;
 import service.order.OrderService;
 import service.order.OrderServiceException;
 
 import java.io.IOException;
 
-@WebServlet("/ConfermaOrdine")
+@WebServlet("/conferma-ordine")
 public class ConfermaOrdineServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
 
-    private final OrderService orderService = ServiceFactory.orderService();
-    private final IndirizzoDAO indirizzoDAO = new IndirizzoDAO();
+    private OrderService orderService;
+    private AddressService addressService;
+
+    @Override
+    public void init() throws ServletException {
+        this.orderService = ServiceFactory.orderService();
+        this.addressService = ServiceFactory.addressService();
+    }
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
@@ -48,8 +53,7 @@ public class ConfermaOrdineServlet extends HttpServlet {
             return;
         }
 
-        Indirizzo indirizzo = indirizzoDAO.trovaIndirizzoPerId(idIndirizzoSpedizione);
-        if (indirizzo == null || indirizzo.getIdUtente() != utente.getIdUtente()) {
+        if (!addressService.isOwnedByUser(idIndirizzoSpedizione, utente.getIdUtente())) {
             request.setAttribute("errore", "Indirizzo di spedizione non valido.");
             request.setAttribute("indirizzoSpedizione", idIndirizzoSpedizione);
             request.getRequestDispatcher("/WEB-INF/jsp/pagamento.jsp").forward(request, response);
@@ -70,8 +74,6 @@ public class ConfermaOrdineServlet extends HttpServlet {
 
         try {
             Ordine ordine = orderService.placeOrder(utente.getIdUtente(), idIndirizzoSpedizione, carrello);
-
-            // Coerenza UI: svuoto anche la sessione
             carrello.svuota();
             session.setAttribute("carrello", carrello);
 

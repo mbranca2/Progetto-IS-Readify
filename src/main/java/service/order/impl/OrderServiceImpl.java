@@ -10,8 +10,9 @@ import service.order.OrderService;
 import service.order.OrderServiceException;
 import utils.DBManager;
 
+import java.math.BigDecimal;
 import java.sql.Connection;
-import java.sql.SQLException;
+import java.util.List;
 import java.util.Objects;
 
 public class OrderServiceImpl implements OrderService {
@@ -25,15 +26,17 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public Ordine placeOrder(int idUtente, int idIndirizzo, Carrello carrello) {
-        if (idUtente <= 0) {
-            throw new OrderServiceException("Utente non valido.");
-        }
-        if (idIndirizzo <= 0) {
-            throw new OrderServiceException("Indirizzo di spedizione non valido.");
-        }
-        if (carrello == null || carrello.isVuoto()) {
-            throw new OrderServiceException("Il carrello è vuoto.");
+    public Ordine placeOrder(int idUtente, int idIndirizzo, Carrello carrello) throws OrderServiceException {
+        if (idUtente <= 0) throw new OrderServiceException("Utente non valido.");
+        if (idIndirizzo <= 0) throw new OrderServiceException("Indirizzo di spedizione non valido.");
+        if (carrello == null || carrello.isVuoto()) throw new OrderServiceException("Il carrello è vuoto.");
+
+        List<DettaglioOrdine> dettagli = carrello.getDettagli();
+        if (dettagli == null || dettagli.isEmpty()) throw new OrderServiceException("Il carrello è vuoto.");
+
+        BigDecimal totale = carrello.getTotale();
+        if (totale == null || totale.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new OrderServiceException("Totale ordine non valido.");
         }
 
         Connection conn = null;
@@ -44,21 +47,14 @@ public class OrderServiceImpl implements OrderService {
             Ordine ordine = new Ordine();
             ordine.setIdUtente(idUtente);
             ordine.setIdIndirizzo(idIndirizzo);
-            ordine.setStato(StatoOrdine.IN_ELABORAZIONE);
-            ordine.setTotale(carrello.getTotale());
+            ordine.setStato(StatoOrdine.IN_ATTESA);
+            ordine.setDettagli(dettagli);
+            ordine.setTotale(totale);
 
-            for (Carrello.ArticoloCarrello articolo : carrello.getArticoli()) {
-                DettaglioOrdine dettaglio = new DettaglioOrdine();
-                dettaglio.setIdLibro(articolo.getLibro().getIdLibro());
-                dettaglio.setQuantita(articolo.getQuantita());
-                dettaglio.setPrezzoUnitario(articolo.getLibro().getPrezzo());
-                dettaglio.setTitoloLibro(articolo.getLibro().getTitolo());
-                ordine.aggiungiDettaglio(dettaglio);
-            }
-
-            boolean salvato = ordineDAO.salvaOrdine(conn, ordine);
-            if (!salvato) {
-                throw new OrderServiceException("Errore durante il salvataggio dell'ordine");
+            boolean ok = ordineDAO.salvaOrdine(conn, ordine);
+            if (!ok) {
+                conn.rollback();
+                throw new OrderServiceException("Impossibile completare l'ordine (disponibilità insufficiente o errore di salvataggio).");
             }
 
             carrelloDAO.svuotaCarrelloUtente(conn, idUtente);
@@ -66,16 +62,13 @@ public class OrderServiceImpl implements OrderService {
             conn.commit();
             return ordine;
 
-        } catch (Exception e) {
-            try {
-                if (conn != null) conn.rollback();
-            } catch (SQLException ignored) {
-            }
+        } catch (OrderServiceException e) {
+            try { if (conn != null) conn.rollback(); } catch (Exception ignored) {}
+            throw e;
 
-            if (e instanceof OrderServiceException) {
-                throw (OrderServiceException) e;
-            }
-            throw new OrderServiceException("Si è verificato un errore durante l'elaborazione dell'ordine", e);
+        } catch (Exception e) {
+            try { if (conn != null) conn.rollback(); } catch (Exception ignored) {}
+            throw new OrderServiceException("Errore durante l'elaborazione dell'ordine.", e);
 
         } finally {
             try {
@@ -83,8 +76,48 @@ public class OrderServiceImpl implements OrderService {
                     conn.setAutoCommit(true);
                     conn.close();
                 }
-            } catch (SQLException ignored) {
+            } catch (Exception ignored) {}
+        }
+    }
+
+    @Override
+    public List<Ordine> listByUser(int idUtente) {
+        if (idUtente <= 0) return List.of();
+        return ordineDAO.trovaPerIdUtente(idUtente);
+    }
+
+    @Override
+    public boolean cancelOrder(int idOrdine, int idUtente) throws OrderServiceException {
+        if (idOrdine <= 0) throw new OrderServiceException("Ordine non valido.");
+        if (idUtente <= 0) throw new OrderServiceException("Utente non valido.");
+
+        Connection conn = null;
+        try {
+            conn = DBManager.getConnection();
+            conn.setAutoCommit(false);
+
+            boolean cancelled = ordineDAO.cancelIfPending(conn, idOrdine, idUtente);
+            if (!cancelled) {
+                conn.rollback();
+                return false;
             }
+
+            ordineDAO.restoreStockForOrder(conn, idOrdine);
+
+            conn.commit();
+            return true;
+
+        } catch (Exception e) {
+            try { if (conn != null) conn.rollback(); } catch (Exception ignored) {}
+            throw new OrderServiceException("Errore durante l'annullamento dell'ordine.", e);
+
+        } finally {
+            try {
+                if (conn != null) {
+                    conn.setAutoCommit(true);
+                    conn.close();
+                }
+            } catch (Exception ignored) {}
         }
     }
 }

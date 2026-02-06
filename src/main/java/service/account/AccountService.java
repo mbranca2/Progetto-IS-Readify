@@ -1,17 +1,26 @@
 package service.account;
 
+import model.bean.Indirizzo;
 import model.bean.Utente;
+
+import java.util.List;
 
 public interface AccountService {
 
-    /**
-     * Effettua login. Lancia AccountServiceException se credenziali errate.
-     */
     Utente login(String email, String password);
 
+    boolean register(Utente utente);
+
+    List<Indirizzo> listAddresses(int idUtente);
+
+    boolean addAddress(int idUtente, Indirizzo indirizzo);
+
+    boolean updateAddress(int idUtente, Indirizzo indirizzo);
+
+    boolean deleteAddress(int idUtente, int idIndirizzo);
+
     /**
-     * Registra utente + indirizzo. Lancia AccountServiceException se fallisce
-     * (es. email già presente o errore DB).
+     * Cambia password dell'utente (verifica oldPassword).
      */
-    void register(RegistrationData data);
+    boolean changePassword(int idUtente, String oldPassword, String newPassword);
 }

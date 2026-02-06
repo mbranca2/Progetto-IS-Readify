@@ -5,10 +5,9 @@ import model.bean.Utente;
 import model.dao.IndirizzoDAO;
 import model.dao.UtenteDAO;
 import service.account.AccountService;
-import service.account.AccountServiceException;
-import service.account.RegistrationData;
-import utils.HashUtil;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.Objects;
 
 public class AccountServiceImpl implements AccountService {
@@ -23,50 +22,77 @@ public class AccountServiceImpl implements AccountService {
 
     @Override
     public Utente login(String email, String password) {
-        Utente u = UtenteDAO.login(email, password); // il tuo DAO è statico: lo riusiamo
-        if (u == null) {
-            throw new AccountServiceException("Email o password non corretti");
+        if (email == null || email.trim().isEmpty()) return null;
+        if (password == null) return null;
+        try {
+            return UtenteDAO.login(email.trim(), password);
+        } catch (Exception e) {
+            return null;
         }
-        return u;
     }
 
     @Override
-    public void register(RegistrationData d) {
+    public boolean register(Utente utente) {
+        if (utente == null) return false;
         try {
-            String ruolo = "registrato";
-            String passwordCifrata = HashUtil.sha1(d.password);
-
-            Utente nuovo = new Utente();
-            nuovo.setEmail(d.email);
-            nuovo.setPasswordCifrata(passwordCifrata);
-            nuovo.setNome(d.nome);
-            nuovo.setCognome(d.cognome);
-            nuovo.setTelefono(d.telefono);
-            nuovo.setRuolo(ruolo);
-
-            boolean okUtente = utenteDAO.inserisciUtente(nuovo);
-            if (!okUtente) {
-                throw new AccountServiceException("Registrazione fallita. L'email potrebbe essere già registrata.");
-            }
-
-            Indirizzo indirizzo = new Indirizzo();
-            indirizzo.setIdUtente(nuovo.getIdUtente());
-            indirizzo.setVia(d.via);
-            indirizzo.setCitta(d.citta);
-            indirizzo.setCap(d.cap);
-            indirizzo.setProvincia(d.provincia != null ? d.provincia.toUpperCase() : null);
-            indirizzo.setPaese(d.paese);
-
-            boolean okIndirizzo = indirizzoDAO.inserisciIndirizzo(indirizzo);
-            if (!okIndirizzo) {
-                // rollback come fai ora
-                utenteDAO.eliminaUtente(nuovo.getIdUtente());
-                throw new AccountServiceException("Errore durante la creazione dell'indirizzo");
-            }
-        } catch (AccountServiceException e) {
-            throw e;
+            return utenteDAO.inserisciUtente(utente);
         } catch (Exception e) {
-            throw new AccountServiceException("Errore durante la registrazione", e);
+            return false;
+        }
+    }
+
+    @Override
+    public List<Indirizzo> listAddresses(int idUtente) {
+        if (idUtente <= 0) return Collections.emptyList();
+        try {
+            return indirizzoDAO.trovaIndirizziPerUtente(idUtente);
+        } catch (Exception e) {
+            return Collections.emptyList();
+        }
+    }
+
+    @Override
+    public boolean addAddress(int idUtente, Indirizzo indirizzo) {
+        if (idUtente <= 0 || indirizzo == null) return false;
+        indirizzo.setIdUtente(idUtente);
+        try {
+            return indirizzoDAO.inserisciIndirizzo(indirizzo);
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    @Override
+    public boolean updateAddress(int idUtente, Indirizzo indirizzo) {
+        if (idUtente <= 0 || indirizzo == null || indirizzo.getIdIndirizzo() <= 0) return false;
+        Indirizzo existing = indirizzoDAO.trovaIndirizzoPerId(indirizzo.getIdIndirizzo());
+        if (existing == null || existing.getIdUtente() != idUtente) return false;
+
+        indirizzo.setIdUtente(idUtente);
+
+        try {
+            // aggiornaIndirizzo già contiene AND id_utente = ?
+            return indirizzoDAO.aggiornaIndirizzo(indirizzo);
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    @Override
+    public boolean deleteAddress(int idUtente, int idIndirizzo) {
+        return false;
+    }
+
+    @Override
+    public boolean changePassword(int idUtente, String oldPassword, String newPassword) {
+        if (idUtente <= 0) return false;
+        if (oldPassword == null || oldPassword.isEmpty()) return false;
+        if (newPassword == null || newPassword.trim().length() < 6) return false;
+
+        try {
+            return utenteDAO.changePassword(idUtente, oldPassword, newPassword.trim());
+        } catch (Exception e) {
+            return false;
         }
     }
 }

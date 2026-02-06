@@ -8,8 +8,7 @@ public interface ReviewService {
 
     List<Recensione> listByBook(int idLibro);
 
-    /**
-     * Inserisce una recensione (utente loggato).
-     */
     boolean addReview(Recensione recensione);
+
+    boolean canUserReview(int idUtente, int idLibro);
 }

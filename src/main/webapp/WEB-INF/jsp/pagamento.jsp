@@ -183,7 +183,7 @@
         <div class="payment-section">
             <h2>Dati di pagamento</h2>
 
-            <form id="payment-form" action="${pageContext.request.contextPath}/ConfermaOrdine" method="post">
+            <form id="payment-form" action="${pageContext.request.contextPath}/conferma-ordine" method="post">
                 <!-- fondamentale: inoltra l'id indirizzo scelto nel checkout -->
                 <input type="hidden" name="indirizzoSpedizione" value="${indirizzoSpedizione}"/>
 

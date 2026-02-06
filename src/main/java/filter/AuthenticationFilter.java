@@ -18,6 +18,7 @@ import java.io.IOException;
         filterName = "AuthenticationFilter",
         urlPatterns = {
                 "/checkout",
+                "/conferma-ordine",
                 "/salva-ordine",
                 "/profilo",
                 "/profilo/*",
@@ -30,7 +31,9 @@ import java.io.IOException;
 public class AuthenticationFilter implements Filter {
 
     @Override
-    public void init(FilterConfig filterConfig) throws ServletException { }
+    public void init(FilterConfig filterConfig) throws ServletException {
+        // no-op
+    }
 
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
@@ -73,6 +76,7 @@ public class AuthenticationFilter implements Filter {
             throws IOException {
 
         String contextPath = httpRequest.getContextPath();
+
         String requestedURL = httpRequest.getRequestURI();
         String queryString = httpRequest.getQueryString();
         if (queryString != null && !queryString.isEmpty()) {
@@ -86,5 +90,7 @@ public class AuthenticationFilter implements Filter {
     }
 
     @Override
-    public void destroy() { }
+    public void destroy() {
+        // no-op
+    }
 }

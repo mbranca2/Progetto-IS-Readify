@@ -39,10 +39,7 @@ public class OrdineDAO {
                 stmtOrdine.setNull(2, Types.INTEGER);
             }
 
-            String stato = ordine.getStato() != null
-                    ? ordine.getStato().name().toLowerCase()
-                    : StatoOrdine.IN_ATTESA.name().toLowerCase();
-
+            String stato = (ordine.getStato() != null ? ordine.getStato() : StatoOrdine.IN_ATTESA).toDbValue();
             stmtOrdine.setString(3, stato);
             stmtOrdine.setBigDecimal(4, ordine.getTotale() != null ? ordine.getTotale() : BigDecimal.ZERO);
 
@@ -80,10 +77,7 @@ public class OrdineDAO {
                 stmt.setNull(2, Types.INTEGER);
             }
 
-            String stato = ordine.getStato() != null
-                    ? ordine.getStato().name().toLowerCase()
-                    : StatoOrdine.IN_ATTESA.name().toLowerCase();
-
+            String stato = (ordine.getStato() != null ? ordine.getStato() : StatoOrdine.IN_ATTESA).toDbValue();
             stmt.setString(3, stato);
             stmt.setBigDecimal(4, ordine.getTotale() != null ? ordine.getTotale() : BigDecimal.ZERO);
             stmt.setInt(5, ordine.getIdOrdine());
@@ -151,23 +145,62 @@ public class OrdineDAO {
         return ordini;
     }
 
+    public Ordine findById(Connection conn, int idOrdine) throws SQLException {
+        String sql = "SELECT * FROM Ordine WHERE id_ordine = ?";
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, idOrdine);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (!rs.next()) return null;
+                Ordine o = new Ordine();
+                o.setIdOrdine(rs.getInt("id_ordine"));
+                o.setIdUtente(rs.getInt("id_utente"));
+                int idInd = rs.getInt("id_indirizzo");
+                if (!rs.wasNull()) o.setIdIndirizzo(idInd);
+                o.setTotale(rs.getBigDecimal("totale"));
+                o.setStato(StatoOrdine.fromDbValue(rs.getString("stato")));
+                Timestamp ts = rs.getTimestamp("data_ordine");
+                o.setDataOrdine(ts != null ? new Date(ts.getTime()) : null);
+                return o;
+            }
+        }
+    }
+
+    public boolean cancelIfPending(Connection conn, int idOrdine, int idUtente) throws SQLException {
+        String sql = "UPDATE Ordine SET stato = ? WHERE id_ordine = ? AND id_utente = ? AND stato = ?";
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, StatoOrdine.ANNULLATO.toDbValue());
+            stmt.setInt(2, idOrdine);
+            stmt.setInt(3, idUtente);
+            stmt.setString(4, StatoOrdine.IN_ATTESA.toDbValue());
+            return stmt.executeUpdate() > 0;
+        }
+    }
+
+    public void restoreStockForOrder(Connection conn, int idOrdine) throws SQLException {
+        String sql = "SELECT id_libro, quantita FROM Contiene WHERE id_ordine = ?";
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, idOrdine);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    int idLibro = rs.getInt("id_libro");
+                    int qta = rs.getInt("quantita");
+                    aggiornaDisponibilitaLibro(conn, idLibro, qta);
+                }
+            }
+        }
+    }
+
     private Ordine mappaOrdineDaResultSet(ResultSet rs) throws SQLException {
         Ordine ordine = new Ordine();
         ordine.setIdOrdine(rs.getInt("id_ordine"));
         Timestamp timestamp = rs.getTimestamp("data_ordine");
         ordine.setDataOrdine(timestamp != null ? new Date(timestamp.getTime()) : null);
 
-        try {
-            String stato = rs.getString("stato").toUpperCase();
-            ordine.setStato(StatoOrdine.valueOf(stato));
-        } catch (Exception e) {
-            logger.log(Level.WARNING, "Stato ordine non valido, impostato a IN_ATTESA", e);
-            ordine.setStato(StatoOrdine.IN_ATTESA);
-        }
+        ordine.setStato(StatoOrdine.fromDbValue(rs.getString("stato")));
         ordine.setTotale(rs.getBigDecimal("totale"));
 
         try {
-            if (hasColumn(rs, "nome") && hasColumn(rs, "cognome") && hasColumn(rs, "email")) {
+            if (hasColumn(rs, "id_utente")) {
                 ordine.setIdUtente(rs.getInt("id_utente"));
             }
             if (hasColumn(rs, "id_indirizzo") && !rs.wasNull()) {
@@ -188,15 +221,9 @@ public class OrdineDAO {
         dettaglio.setPrezzoUnitario(rs.getBigDecimal("prezzo_unitario"));
 
         try {
-            if (hasColumn(rs, "titolo")) {
-                dettaglio.setTitoloLibro(rs.getString("titolo"));
-            }
-            if (hasColumn(rs, "autore")) {
-                dettaglio.setAutoreLibro(rs.getString("autore"));
-            }
-            if (hasColumn(rs, "isbn")) {
-                dettaglio.setIsbnLibro(rs.getString("isbn"));
-            }
+            if (hasColumn(rs, "titolo")) dettaglio.setTitoloLibro(rs.getString("titolo"));
+            if (hasColumn(rs, "autore")) dettaglio.setAutoreLibro(rs.getString("autore"));
+            if (hasColumn(rs, "isbn")) dettaglio.setIsbnLibro(rs.getString("isbn"));
 
             if (hasColumn(rs, "immagine_copertina")) {
                 String copertina = rs.getString("immagine_copertina");
@@ -230,21 +257,6 @@ public class OrdineDAO {
                 "FROM Contiene c " +
                 "JOIN Libro l ON c.id_libro = l.id_libro " +
                 "WHERE c.id_ordine = ?";
-
-        if (ordine.getIdIndirizzo() <= 0) {
-            String indirizzoSql = "SELECT id_indirizzo FROM Ordine WHERE id_ordine = ?";
-            try (PreparedStatement stmt = conn.prepareStatement(indirizzoSql)) {
-                stmt.setInt(1, ordine.getIdOrdine());
-                try (ResultSet rs = stmt.executeQuery()) {
-                    if (rs.next() && !rs.wasNull()) {
-                        int idIndirizzo = rs.getInt("id_indirizzo");
-                        if (!rs.wasNull()) {
-                            ordine.setIdIndirizzo(idIndirizzo);
-                        }
-                    }
-                }
-            }
-        }
 
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, ordine.getIdOrdine());
@@ -290,6 +302,7 @@ public class OrdineDAO {
 
         try (PreparedStatement checkStmt = conn.prepareStatement(checkQuery);
              PreparedStatement updateStmt = conn.prepareStatement(updateQuery)) {
+
             checkStmt.setInt(1, idLibro);
             ResultSet rs = checkStmt.executeQuery();
 
@@ -301,18 +314,18 @@ public class OrdineDAO {
             int quantitaAttuale = rs.getInt("disponibilita");
             int nuovaQuantita = quantitaAttuale + quantitaDaAggiornare;
             if (nuovaQuantita < 0) {
-                logger.log(Level.WARNING, "Quantità insufficiente per il libro ID: " + idLibro +
+                logger.log(Level.WARNING, "Quantità insufficiente per libro ID: " + idLibro +
                         ". Disponibile: " + quantitaAttuale +
                         ", Richiesta: " + (-quantitaDaAggiornare));
                 return false;
             }
+
             updateStmt.setInt(1, nuovaQuantita);
             updateStmt.setInt(2, idLibro);
+            return updateStmt.executeUpdate() != 0;
 
-            int rowsUpdated = updateStmt.executeUpdate();
-            return rowsUpdated != 0;
         } catch (SQLException e) {
-            logger.log(Level.SEVERE, "Errore durante l'aggiornamento della disponibilità del libro ID: " + idLibro, e);
+            logger.log(Level.SEVERE, "Errore aggiornamento disponibilità libro ID: " + idLibro, e);
             throw e;
         }
     }

@@ -8,25 +8,22 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import model.bean.Libro;
 import model.bean.Utente;
-import model.dao.OrdineDAO;
 import service.ServiceFactory;
 import service.catalog.CatalogService;
 import service.review.ReviewService;
 
 import java.io.IOException;
 
-@WebServlet("/dettaglio-libro")
+@WebServlet(name = "DettaglioLibroServlet", urlPatterns = {"/dettaglio-libro"})
 public class DettaglioLibroServlet extends HttpServlet {
 
     private CatalogService catalogService;
     private ReviewService reviewService;
-    private OrdineDAO ordineDAO;
 
     @Override
     public void init() throws ServletException {
         this.catalogService = ServiceFactory.catalogService();
         this.reviewService = ServiceFactory.reviewService();
-        this.ordineDAO = new OrdineDAO();
     }
 
     @Override
@@ -42,8 +39,7 @@ public class DettaglioLibroServlet extends HttpServlet {
         Libro libro = null;
         try {
             libro = catalogService.getById(idLibro);
-        } catch (Exception ignored) {
-        }
+        } catch (Exception ignored) {}
 
         if (libro == null) {
             response.sendRedirect(request.getContextPath() + "/home?error=book_not_found");
@@ -57,7 +53,7 @@ public class DettaglioLibroServlet extends HttpServlet {
         HttpSession session = request.getSession(false);
         Utente utente = (session != null) ? (Utente) session.getAttribute("utente") : null;
         if (utente != null) {
-            canReview = ordineDAO.hasUserPurchasedBook(utente.getIdUtente(), idLibro);
+            canReview = reviewService.canUserReview(utente.getIdUtente(), idLibro);
         }
         request.setAttribute("canReview", canReview);
 
@@ -72,3 +68,4 @@ public class DettaglioLibroServlet extends HttpServlet {
         }
     }
 }
+

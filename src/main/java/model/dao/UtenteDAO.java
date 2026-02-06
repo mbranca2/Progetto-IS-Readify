@@ -9,10 +9,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class UtenteDAO {
+
     public boolean inserisciUtente(Utente utente) {
-        String query = "INSERT INTO Utente (email, password_cifrata, nome, cognome, ruolo, telefono) " + "VALUES (?, ?, ?, ?, ?, ?)";
+        String query = "INSERT INTO Utente (email, password_cifrata, nome, cognome, ruolo, telefono) VALUES (?, ?, ?, ?, ?, ?)";
         try (Connection conn = DBManager.getConnection();
              PreparedStatement stmt = conn.prepareStatement(query, Statement.RETURN_GENERATED_KEYS)) {
+
             stmt.setString(1, utente.getEmail());
             stmt.setString(2, utente.getPasswordCifrata());
             stmt.setString(3, utente.getNome());
@@ -29,6 +31,7 @@ public class UtenteDAO {
                 return true;
             }
             return false;
+
         } catch (SQLException e) {
             e.printStackTrace();
             return false;
@@ -38,13 +41,16 @@ public class UtenteDAO {
     public Utente trovaUtentePerId(int id) {
         String query = "SELECT * FROM Utente WHERE id_utente = ?";
 
-        try (Connection conn = DBManager.getConnection(); PreparedStatement stmt = conn.prepareStatement(query)) {
+        try (Connection conn = DBManager.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(query)) {
+
             stmt.setInt(1, id);
             ResultSet rs = stmt.executeQuery();
 
             if (rs.next()) {
                 return mappaRisultatoAUtente(rs);
             }
+
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -74,6 +80,7 @@ public class UtenteDAO {
             while (rs.next()) {
                 utenti.add(mappaRisultatoAUtente(rs));
             }
+
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -84,7 +91,9 @@ public class UtenteDAO {
         Utente user = null;
         String sql = "SELECT * FROM Utente WHERE email = ?";
 
-        try (Connection conn = DBManager.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
+        try (Connection conn = DBManager.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
             stmt.setString(1, email);
 
             try (ResultSet rs = stmt.executeQuery()) {
@@ -105,6 +114,7 @@ public class UtenteDAO {
                     }
                 }
             }
+
         } catch (Exception e) {
             System.err.println("Errore durante il login:");
             e.printStackTrace();
@@ -113,9 +123,11 @@ public class UtenteDAO {
     }
 
     public boolean aggiornaUtente(Utente utente) {
-        String query = "UPDATE Utente SET email = ?, nome = ?, cognome = ?, " + "ruolo = ?, telefono = ? WHERE id_utente = ?";
+        String query = "UPDATE Utente SET email = ?, nome = ?, cognome = ?, ruolo = ?, telefono = ? WHERE id_utente = ?";
 
-        try (Connection conn = DBManager.getConnection(); PreparedStatement stmt = conn.prepareStatement(query)) {
+        try (Connection conn = DBManager.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(query)) {
+
             stmt.setString(1, utente.getEmail());
             stmt.setString(2, utente.getNome());
             stmt.setString(3, utente.getCognome());
@@ -123,6 +135,7 @@ public class UtenteDAO {
             stmt.setString(5, utente.getTelefono());
             stmt.setInt(6, utente.getIdUtente());
             return stmt.executeUpdate() > 0;
+
         } catch (SQLException e) {
             e.printStackTrace();
             return false;
@@ -132,9 +145,60 @@ public class UtenteDAO {
     public boolean eliminaUtente(int id) {
         String query = "DELETE FROM Utente WHERE id_utente = ?";
 
-        try (Connection conn = DBManager.getConnection(); PreparedStatement stmt = conn.prepareStatement(query)) {
+        try (Connection conn = DBManager.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(query)) {
+
             stmt.setInt(1, id);
             return stmt.executeUpdate() > 0;
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    public boolean changePassword(int idUtente, String oldPassword, String newPassword) {
+        if (idUtente <= 0) return false;
+        if (oldPassword == null || newPassword == null) return false;
+
+        String select = "SELECT password_cifrata FROM Utente WHERE id_utente = ?";
+        String update = "UPDATE Utente SET password_cifrata = ? WHERE id_utente = ?";
+
+        try (Connection conn = DBManager.getConnection()) {
+            conn.setAutoCommit(false);
+
+            String storedHash;
+            try (PreparedStatement ps = conn.prepareStatement(select)) {
+                ps.setInt(1, idUtente);
+                try (ResultSet rs = ps.executeQuery()) {
+                    if (!rs.next()) {
+                        conn.rollback();
+                        return false;
+                    }
+                    storedHash = rs.getString("password_cifrata");
+                }
+            }
+
+            String providedHash = HashUtil.sha1(oldPassword);
+            if (storedHash == null || !storedHash.equals(providedHash)) {
+                conn.rollback();
+                return false;
+            }
+
+            String newHash = HashUtil.sha1(newPassword);
+            try (PreparedStatement ps = conn.prepareStatement(update)) {
+                ps.setString(1, newHash);
+                ps.setInt(2, idUtente);
+                boolean ok = ps.executeUpdate() > 0;
+                if (!ok) {
+                    conn.rollback();
+                    return false;
+                }
+            }
+
+            conn.commit();
+            return true;
+
         } catch (SQLException e) {
             e.printStackTrace();
             return false;

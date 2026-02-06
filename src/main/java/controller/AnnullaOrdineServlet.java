@@ -12,8 +12,8 @@ import service.order.OrderService;
 
 import java.io.IOException;
 
-@WebServlet(name = "VisualizzaOrdiniServlet", urlPatterns = {"/ordini"})
-public class VisualizzaOrdiniServlet extends HttpServlet {
+@WebServlet(name = "AnnullaOrdineServlet", urlPatterns = {"/annulla-ordine"})
+public class AnnullaOrdineServlet extends HttpServlet {
 
     private OrderService orderService;
 
@@ -23,18 +23,26 @@ public class VisualizzaOrdiniServlet extends HttpServlet {
     }
 
     @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
+            throws IOException {
 
         HttpSession session = request.getSession(false);
         Utente utente = (session != null) ? (Utente) session.getAttribute("utente") : null;
 
         if (utente == null) {
-            response.sendRedirect(request.getContextPath() + "/login");
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             return;
         }
 
-        request.setAttribute("ordini", orderService.listByUser(utente.getIdUtente()));
-        request.getRequestDispatcher("/WEB-INF/jsp/ordini.jsp").forward(request, response);
+        int idOrdine;
+        try {
+            idOrdine = Integer.parseInt(request.getParameter("idOrdine"));
+        } catch (Exception e) {
+            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            return;
+        }
+
+        boolean ok = orderService.cancelOrder(idOrdine, utente.getIdUtente());
+        response.setStatus(ok ? HttpServletResponse.SC_OK : HttpServletResponse.SC_CONFLICT);
     }
 }

@@ -7,18 +7,22 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import model.bean.Carrello;
-import model.bean.Indirizzo;
 import model.bean.Utente;
-import model.dao.IndirizzoDAO;
+import service.ServiceFactory;
+import service.address.AddressService;
 
 import java.io.IOException;
-import java.util.List;
 
 @WebServlet("/checkout")
 public class CheckoutServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
 
-    private final IndirizzoDAO indirizzoDAO = new IndirizzoDAO();
+    private AddressService addressService;
+
+    @Override
+    public void init() throws ServletException {
+        this.addressService = ServiceFactory.addressService();
+    }
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -37,9 +41,7 @@ public class CheckoutServlet extends HttpServlet {
             return;
         }
 
-        List<Indirizzo> indirizzi = indirizzoDAO.trovaIndirizziPerUtente(utente.getIdUtente());
-        req.setAttribute("indirizzi", indirizzi);
-
+        req.setAttribute("indirizzi", addressService.listByUser(utente.getIdUtente()));
         req.getRequestDispatcher("/WEB-INF/jsp/checkout.jsp").forward(req, resp);
     }
 
@@ -64,17 +66,14 @@ public class CheckoutServlet extends HttpServlet {
         try {
             idIndirizzoSpedizione = Integer.parseInt(request.getParameter("indirizzoSpedizione"));
         } catch (Exception e) {
-            List<Indirizzo> indirizzi = indirizzoDAO.trovaIndirizziPerUtente(utente.getIdUtente());
-            request.setAttribute("indirizzi", indirizzi);
+            request.setAttribute("indirizzi", addressService.listByUser(utente.getIdUtente()));
             request.setAttribute("errore", "Seleziona un indirizzo di spedizione valido.");
             request.getRequestDispatcher("/WEB-INF/jsp/checkout.jsp").forward(request, response);
             return;
         }
 
-        Indirizzo indirizzo = indirizzoDAO.trovaIndirizzoPerId(idIndirizzoSpedizione);
-        if (indirizzo == null || indirizzo.getIdUtente() != utente.getIdUtente()) {
-            List<Indirizzo> indirizzi = indirizzoDAO.trovaIndirizziPerUtente(utente.getIdUtente());
-            request.setAttribute("indirizzi", indirizzi);
+        if (!addressService.isOwnedByUser(idIndirizzoSpedizione, utente.getIdUtente())) {
+            request.setAttribute("indirizzi", addressService.listByUser(utente.getIdUtente()));
             request.setAttribute("errore", "Indirizzo di spedizione non valido.");
             request.getRequestDispatcher("/WEB-INF/jsp/checkout.jsp").forward(request, response);
             return;

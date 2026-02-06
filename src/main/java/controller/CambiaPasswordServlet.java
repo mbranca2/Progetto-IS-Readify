@@ -7,60 +7,51 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import model.bean.Utente;
-import model.dao.UtenteDAO;
-import utils.HashUtil;
+import service.ServiceFactory;
+import service.account.AccountService;
 
 import java.io.IOException;
 
 @WebServlet("/cambia-password")
 public class CambiaPasswordServlet extends HttpServlet {
+
+    private AccountService accountService;
+
     @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+    public void init() throws ServletException {
+        this.accountService = ServiceFactory.accountService();
+    }
+
+    @Override
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+
         HttpSession session = request.getSession(false);
-        if (session == null || session.getAttribute("utente") == null) {
-            response.sendRedirect("jsp/login.jsp");
+        Utente utente = (session != null) ? (Utente) session.getAttribute("utente") : null;
+
+        if (utente == null) {
+            response.sendRedirect(request.getContextPath() + "/login");
             return;
         }
 
-        Utente utente = (Utente) session.getAttribute("utente");
-        String vecchiaPassword = request.getParameter("vecchiaPassword");
-        String nuovaPassword = request.getParameter("nuovaPassword");
-        String confermaPassword = request.getParameter("confermaPassword");
+        String oldPassword = request.getParameter("oldPassword");
+        String newPassword = request.getParameter("newPassword");
+        String confirmPassword = request.getParameter("confirmPassword");
 
-        if (vecchiaPassword == null || nuovaPassword == null || confermaPassword == null ||
-                vecchiaPassword.isEmpty() || nuovaPassword.isEmpty() || confermaPassword.isEmpty()) {
-            request.setAttribute("errore", "Tutti i campi sono obbligatori");
-            request.getRequestDispatcher("jsp/gestioneAccount.jsp").forward(request, response);
+        if (newPassword == null || confirmPassword == null || !newPassword.equals(confirmPassword)) {
+            request.setAttribute("errore", "Le nuove password non coincidono.");
+            request.getRequestDispatcher("/WEB-INF/jsp/profilo.jsp").forward(request, response);
             return;
         }
 
-        if (nuovaPassword.length() < 8) {
-            request.setAttribute("errore", "La nuova password deve essere di almeno 8 caratteri");
-            request.getRequestDispatcher("jsp/gestioneAccount.jsp").forward(request, response);
-            return;
-        }
+        boolean ok = accountService.changePassword(utente.getIdUtente(), oldPassword, newPassword);
 
-        if (!nuovaPassword.equals(confermaPassword)) {
-            request.setAttribute("errore", "Le password non coincidono");
-            request.getRequestDispatcher("jsp/gestioneAccount.jsp").forward(request, response);
-            return;
-        }
-
-        String vecchiaPasswordHash = HashUtil.sha1(vecchiaPassword);
-        if (!vecchiaPasswordHash.equals(utente.getPasswordCifrata())) {
-            request.setAttribute("errore", "La password attuale non è corretta");
-            request.getRequestDispatcher("jsp/gestioneAccount.jsp").forward(request, response);
-            return;
-        }
-
-        String nuovaPasswordHash = HashUtil.sha1(nuovaPassword);
-        utente.setPasswordCifrata(nuovaPasswordHash);
-        UtenteDAO utenteDAO = new UtenteDAO();
-        if (utenteDAO.aggiornaUtente(utente)) {
-            request.setAttribute("messaggio", "Password aggiornata con successo");
+        if (ok) {
+            request.setAttribute("successo", "Password aggiornata con successo.");
         } else {
-            request.setAttribute("errore", "Errore durante l'aggiornamento della password");
+            request.setAttribute("errore", "Impossibile aggiornare la password. Verifica la password attuale.");
         }
-        request.getRequestDispatcher("jsp/gestioneAccount.jsp").forward(request, response);
+
+        request.getRequestDispatcher("/WEB-INF/jsp/profilo.jsp").forward(request, response);
     }
 }

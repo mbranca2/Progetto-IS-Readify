@@ -30,6 +30,12 @@ public class ReviewServiceImpl implements ReviewService {
     }
 
     @Override
+    public boolean canUserReview(int idUtente, int idLibro) {
+        if (idUtente <= 0 || idLibro <= 0) return false;
+        return ordineDAO.hasUserPurchasedBook(idUtente, idLibro);
+    }
+
+    @Override
     public boolean addReview(Recensione recensione) {
         if (recensione == null) return false;
 
@@ -43,7 +49,7 @@ public class ReviewServiceImpl implements ReviewService {
         if (voto < 1 || voto > 5) return false;
 
         // RF_REC_1: recensione consentita solo se il libro è stato acquistato dall'utente
-        if (!ordineDAO.hasUserPurchasedBook(idUtente, idLibro)) {
+        if (!canUserReview(idUtente, idLibro)) {
             return false;
         }
 
