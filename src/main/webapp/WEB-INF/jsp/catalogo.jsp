@@ -24,20 +24,17 @@
 
 <main class="container">
     <div class="catalogo-layout">
-        <!-- Sidebar Filtri -->
         <aside class="sidebar">
-            <!-- Sezione Categorie -->
             <div class="sidebar-section">
                 <h3>Categorie</h3>
                 <div class="categorie-list" id="categorieGrid">
-                    <!-- Categoria "Tutte" -->
                     <div class="categoria-item selezionata" data-categoria-id="0" onclick="filtraPerCategoria(0)">
                         <span class="icon">📚</span>
                         <span>Tutte le categorie</span>
                     </div>
 
                     <c:forEach items="${categorie}" var="categoria">
-                        <div class="categoria-item" data-categoria-id="${categoria.idCategoria}" 
+                        <div class="categoria-item" data-categoria-id="${categoria.idCategoria}"
                              onclick="filtraPerCategoria(${categoria.idCategoria})">
                             <c:choose>
                                 <c:when test="${categoria.nomeCategoria.toLowerCase().contains('narrativa')}">
@@ -61,7 +58,7 @@
                     </c:forEach>
                 </div>
             </div>
-            
+
             <div class="search-bar">
                 <input type="text" placeholder="Cerca nel catalogo..." id="searchInput">
                 <button type="button" id="searchButton" aria-label="Cerca">
@@ -69,7 +66,7 @@
                     <span class="sr-only">Cerca</span>
                 </button>
             </div>
-            
+
             <div class="sidebar-section">
                 <h3>Filtra per</h3>
                 <div class="filter-option">
@@ -91,7 +88,7 @@
                         <label for="priceAll">Tutti i prezzi</label>
                     </div>
                 </div>
-                
+
                 <div class="filter-option">
                     <h4>Disponibilità</h4>
                     <div>
@@ -108,7 +105,7 @@
                     </div>
                 </div>
             </div>
-            
+
             <div class="sidebar-section">
                 <h3>Contatti</h3>
                 <p><span class="icon">📞</span> 123 456 7890</p>
@@ -117,17 +114,16 @@
             </div>
         </aside>
 
-        <!-- Contenuto Principale -->
         <div class="main-content">
             <div class="libri-grid" id="booksGrid">
                 <c:forEach items="${libri}" var="libro">
-                    <div class="libro-card" 
+                    <div class="libro-card"
                          data-categorie="<c:forEach items="${libro.categorie}" var="cat" varStatus="loop">${cat}${!loop.last ? ',' : ''}</c:forEach>"
-                         data-prezzo="${libro.prezzo}" 
+                         data-prezzo="${libro.prezzo}"
                          data-disponibile="${libro.disponibilita > 0}">
                         <div class="img-container">
                             <img src="${pageContext.request.contextPath}/img/libri/copertine/${not empty libro.copertina ? libro.copertina : 'default.jpg'}"
-                                 alt="${libro.titolo}" 
+                                 alt="${libro.titolo}"
                                  onerror="this.onerror=null; this.src='${pageContext.request.contextPath}/img/libri/copertine/default.jpg';">
                         </div>
                         <div class="libro-info">
@@ -135,9 +131,9 @@
                             <p class="autore">${libro.autore}</p>
                             <c:if test="${not empty libro.descrizione}">
                                 <p class="descrizione">
-                                    ${fn:length(libro.descrizione) > 150 ? 
-                                        fn:substring(libro.descrizione, 0, 150).concat('...') : 
-                                        libro.descrizione}
+                                        ${fn:length(libro.descrizione) > 150 ?
+                                                fn:substring(libro.descrizione, 0, 150).concat('...') :
+                                                libro.descrizione}
                                 </p>
                             </c:if>
                             <div class="prezzo-disponibilita">
@@ -161,7 +157,7 @@
                             <div class="libro-azioni">
                                 <c:choose>
                                     <c:when test="${libro.disponibilita > 0}">
-                                        <a href="libro?id=${libro.idLibro}" class="btn btn-primary">Dettagli</a>
+                                        <a href="${pageContext.request.contextPath}/dettaglio-libro?id=${libro.idLibro}" class="btn btn-primary">Dettagli</a>
                                     </c:when>
                                     <c:otherwise>
                                         <div class="tooltip-container">
@@ -174,7 +170,7 @@
                         </div>
                     </div>
                 </c:forEach>
-                
+
                 <c:if test="${empty libri}">
                     <div class="nessun-risultato">
                         <p>Nessun libro disponibile con i filtri selezionati.</p>
