@@ -41,7 +41,7 @@ public class OrdineDAO {
 
             String stato = ordine.getStato() != null
                     ? ordine.getStato().name().toLowerCase()
-                    : StatoOrdine.IN_ELABORAZIONE.name().toLowerCase();
+                    : StatoOrdine.IN_ATTESA.name().toLowerCase();
 
             stmtOrdine.setString(3, stato);
             stmtOrdine.setBigDecimal(4, ordine.getTotale() != null ? ordine.getTotale() : BigDecimal.ZERO);
@@ -82,7 +82,7 @@ public class OrdineDAO {
 
             String stato = ordine.getStato() != null
                     ? ordine.getStato().name().toLowerCase()
-                    : StatoOrdine.IN_ELABORAZIONE.name().toLowerCase();
+                    : StatoOrdine.IN_ATTESA.name().toLowerCase();
 
             stmt.setString(3, stato);
             stmt.setBigDecimal(4, ordine.getTotale() != null ? ordine.getTotale() : BigDecimal.ZERO);
@@ -117,7 +117,6 @@ public class OrdineDAO {
                 stmt.setBigDecimal(4, dettaglio.getPrezzoUnitario());
                 stmt.addBatch();
 
-                // Mantiene la tua logica: lock + update disponibilità durante inserimento dettagli
                 if (!aggiornaDisponibilitaLibro(conn, dettaglio.getIdLibro(), -dettaglio.getQuantita())) {
                     return false;
                 }
@@ -162,8 +161,8 @@ public class OrdineDAO {
             String stato = rs.getString("stato").toUpperCase();
             ordine.setStato(StatoOrdine.valueOf(stato));
         } catch (Exception e) {
-            logger.log(Level.WARNING, "Stato ordine non valido, impostato a IN_ELABORAZIONE", e);
-            ordine.setStato(StatoOrdine.IN_ELABORAZIONE);
+            logger.log(Level.WARNING, "Stato ordine non valido, impostato a IN_ATTESA", e);
+            ordine.setStato(StatoOrdine.IN_ATTESA);
         }
         ordine.setTotale(rs.getBigDecimal("totale"));
 
@@ -189,14 +188,6 @@ public class OrdineDAO {
         dettaglio.setPrezzoUnitario(rs.getBigDecimal("prezzo_unitario"));
 
         try {
-            ResultSetMetaData metaData = rs.getMetaData();
-            int columnCount = metaData.getColumnCount();
-            StringBuilder columns = new StringBuilder("Colonne disponibili nel ResultSet: ");
-            for (int i = 1; i <= columnCount; i++) {
-                columns.append(metaData.getColumnName(i)).append(", ");
-            }
-            logger.log(Level.INFO, columns.toString());
-
             if (hasColumn(rs, "titolo")) {
                 dettaglio.setTitoloLibro(rs.getString("titolo"));
             }
@@ -207,19 +198,15 @@ public class OrdineDAO {
                 dettaglio.setIsbnLibro(rs.getString("isbn"));
             }
 
-            String copertina;
             if (hasColumn(rs, "immagine_copertina")) {
-                copertina = rs.getString("immagine_copertina");
+                String copertina = rs.getString("immagine_copertina");
                 if (copertina != null && !copertina.trim().isEmpty()) {
                     if (!copertina.startsWith("img/libri/copertine/")) {
                         copertina = "img/libri/copertine/" + copertina;
                     }
                     dettaglio.setImmagineCopertina(copertina);
-                    logger.log(Level.INFO, "Impostata immagine copertina: " + copertina);
                 }
             }
-            logger.log(Level.INFO, "Dettaglio ordine mappato - ID Libro: {0}, Titolo: {1}, Copertina: {2}",
-                    new Object[]{dettaglio.getIdLibro(), dettaglio.getTitoloLibro(), dettaglio.getImmagineCopertina()});
         } catch (SQLException e) {
             logger.log(Level.WARNING, "Errore durante il mapping dei dettagli aggiuntivi", e);
         }
@@ -238,15 +225,11 @@ public class OrdineDAO {
     }
 
     private void caricaDettagliOrdine(Ordine ordine, Connection conn) throws SQLException {
-        logger.log(Level.INFO, "Caricamento dettagli per ordine ID: " + ordine.getIdOrdine());
-
         String sql = "SELECT c.id_ordine, c.id_libro, c.quantita, c.prezzo_unitario, " +
                 "l.titolo, l.autore, l.isbn, l.copertina as immagine_copertina " +
                 "FROM Contiene c " +
                 "JOIN Libro l ON c.id_libro = l.id_libro " +
                 "WHERE c.id_ordine = ?";
-
-        logger.log(Level.INFO, "Esecuzione query: " + sql);
 
         if (ordine.getIdIndirizzo() <= 0) {
             String indirizzoSql = "SELECT id_indirizzo FROM Ordine WHERE id_ordine = ?";
@@ -257,8 +240,6 @@ public class OrdineDAO {
                         int idIndirizzo = rs.getInt("id_indirizzo");
                         if (!rs.wasNull()) {
                             ordine.setIdIndirizzo(idIndirizzo);
-                            logger.log(Level.INFO, "Indirizzo trovato per ordine ID {0}: {1}",
-                                    new Object[]{ordine.getIdOrdine(), idIndirizzo});
                         }
                     }
                 }
@@ -269,23 +250,37 @@ public class OrdineDAO {
             stmt.setInt(1, ordine.getIdOrdine());
             try (ResultSet rs = stmt.executeQuery()) {
                 List<DettaglioOrdine> dettagli = new ArrayList<>();
-
                 while (rs.next()) {
-                    DettaglioOrdine dettaglio = mappaRisultatoADettaglio(rs);
-                    logger.log(Level.INFO, "Dettaglio ordine mappato - ID Libro: {0}, Titolo: {1}, Copertina: {2}, Query SQL: {3}",
-                            new Object[]{dettaglio.getIdLibro(), dettaglio.getTitoloLibro(), dettaglio.getImmagineCopertina(), sql});
-                    logger.log(Level.INFO, "Valori colonne raw - id_libro: {0}, titolo: {1}, copertina: {2}",
-                            new Object[]{rs.getInt("id_libro"), rs.getString("titolo"), rs.getString("immagine_copertina")});
-                    dettagli.add(dettaglio);
+                    dettagli.add(mappaRisultatoADettaglio(rs));
                 }
                 ordine.setDettagli(dettagli);
-                logger.log(Level.INFO, "Caricati {0} dettagli per l'ordine ID {1}",
-                        new Object[]{dettagli.size(), ordine.getIdOrdine()});
             }
+        }
+    }
+
+    public boolean hasUserPurchasedBook(int idUtente, int idLibro) {
+        if (idUtente <= 0 || idLibro <= 0) return false;
+
+        String sql = "SELECT 1 " +
+                "FROM Ordine o " +
+                "JOIN Contiene c ON o.id_ordine = c.id_ordine " +
+                "WHERE o.id_utente = ? AND c.id_libro = ? AND o.stato <> 'annullato' " +
+                "LIMIT 1";
+
+        try (Connection conn = DBManager.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setInt(1, idUtente);
+            stmt.setInt(2, idLibro);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                return rs.next();
+            }
+
         } catch (SQLException e) {
-            logger.log(Level.SEVERE, "Errore durante il caricamento dei dettagli dell'ordine ID " +
-                    ordine.getIdOrdine(), e);
-            throw e;
+            logger.log(Level.SEVERE, "Errore durante la verifica acquisto libro. idUtente=" + idUtente +
+                    ", idLibro=" + idLibro, e);
+            return false;
         }
     }
 
@@ -315,11 +310,7 @@ public class OrdineDAO {
             updateStmt.setInt(2, idLibro);
 
             int rowsUpdated = updateStmt.executeUpdate();
-            if (rowsUpdated == 0) {
-                logger.log(Level.WARNING, "Nessun aggiornamento effettuato per il libro ID: " + idLibro);
-                return false;
-            }
-            return true;
+            return rowsUpdated != 0;
         } catch (SQLException e) {
             logger.log(Level.SEVERE, "Errore durante l'aggiornamento della disponibilità del libro ID: " + idLibro, e);
             throw e;

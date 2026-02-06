@@ -94,10 +94,10 @@
                     <span>Recensione inserita con successo!</span>
                 </div>
             </c:if>
-            <c:if test="${param.review == 'err'}">
+            <c:if test="${param.review == 'not_allowed'}">
                 <div class="alert alert-error" role="alert">
                     <span>❌</span>
-                    <span>Impossibile inserire la recensione.</span>
+                    <span>Puoi inserire una recensione solo se hai acquistato questo libro.</span>
                 </div>
             </c:if>
 
@@ -124,41 +124,53 @@
 
                 <h3>Recensioni</h3>
 
-                <!-- Form inserimento recensione (solo utenti loggati) -->
-                <c:if test="${not empty sessionScope.utente}">
-                    <div class="review-form-container">
-                        <form action="${pageContext.request.contextPath}/recensioni/aggiungi" method="post">
-                            <input type="hidden" name="idLibro" value="${libro.idLibro}"/>
+                <!-- Form inserimento recensione -->
+                <c:choose>
+                    <!-- Non loggato -->
+                    <c:when test="${empty sessionScope.utente}">
+                        <p class="no-reviews">
+                            Per lasciare una recensione devi effettuare il login.
+                        </p>
+                    </c:when>
 
-                            <div class="form-group">
-                                <label for="voto">Valutazione</label>
-                                <select id="voto" name="voto" required>
-                                    <option value="">Seleziona</option>
-                                    <option value="5">★★★★★ (5)</option>
-                                    <option value="4">★★★★☆ (4)</option>
-                                    <option value="3">★★★☆☆ (3)</option>
-                                    <option value="2">★★☆☆☆ (2)</option>
-                                    <option value="1">★☆☆☆☆ (1)</option>
-                                </select>
-                            </div>
+                    <!-- Loggato ma NON ha acquistato: non mostrare form -->
+                    <c:when test="${not empty sessionScope.utente && (empty canReview || canReview == false)}">
+                        <p class="no-reviews">
+                            Per lasciare una recensione devi aver acquistato questo libro.
+                        </p>
+                    </c:when>
 
-                            <div class="form-group">
-                                <label for="commento">Commento</label>
-                                <textarea id="commento" name="commento" rows="4" maxlength="2000"
-                                          placeholder="Scrivi qui la tua recensione..."></textarea>
-                            </div>
+                    <!-- Loggato e ha acquistato: mostra form -->
+                    <c:otherwise>
+                        <div class="review-form-container">
+                            <form action="${pageContext.request.contextPath}/recensioni/aggiungi" method="post">
+                                <input type="hidden" name="idLibro" value="${libro.idLibro}"/>
 
-                            <button type="submit" class="btn-add-to-cart">
-                                ✍️ Pubblica recensione
-                            </button>
-                        </form>
-                    </div>
-                </c:if>
-                <c:if test="${empty sessionScope.utente}">
-                    <p class="no-reviews">
-                        Per lasciare una recensione devi effettuare il login.
-                    </p>
-                </c:if>
+                                <div class="form-group">
+                                    <label for="voto">Valutazione</label>
+                                    <select id="voto" name="voto" required>
+                                        <option value="">Seleziona</option>
+                                        <option value="5">★★★★★ (5)</option>
+                                        <option value="4">★★★★☆ (4)</option>
+                                        <option value="3">★★★☆☆ (3)</option>
+                                        <option value="2">★★☆☆☆ (2)</option>
+                                        <option value="1">★☆☆☆☆ (1)</option>
+                                    </select>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="commento">Commento</label>
+                                    <textarea id="commento" name="commento" rows="4" maxlength="2000"
+                                              placeholder="Scrivi qui la tua recensione..."></textarea>
+                                </div>
+
+                                <button type="submit" class="btn-add-to-cart">
+                                    ✍️ Pubblica recensione
+                                </button>
+                            </form>
+                        </div>
+                    </c:otherwise>
+                </c:choose>
 
                 <!-- Lista recensioni -->
                 <c:choose>

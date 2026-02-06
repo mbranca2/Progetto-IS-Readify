@@ -59,6 +59,6 @@ public class ServiceFactory {
     }
 
     public static ReviewService reviewService() {
-        return new ReviewServiceImpl(new RecensioneDAO());
+        return new ReviewServiceImpl(new RecensioneDAO(), new OrdineDAO());
     }
 }

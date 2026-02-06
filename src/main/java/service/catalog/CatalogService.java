@@ -18,13 +18,7 @@ public interface CatalogService {
      */
     List<Libro> search(String titolo, String autore, String categoriaId, int page, int pageSize);
 
-    /**
-     * Conteggio risultati della ricerca (per paginazione).
-     */
     int count(String titolo, String autore, String categoriaId);
 
-    /**
-     * Dettaglio libro.
-     */
     Libro getById(int idLibro);
 }

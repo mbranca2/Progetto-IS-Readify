@@ -5,20 +5,27 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import model.dao.LibroDAO;
+import service.ServiceFactory;
+import service.catalog.AdminCatalogService;
 
 import java.io.IOException;
 
 @WebServlet("/admin/libri/elimina")
 public class EliminaLibroServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
-    private final LibroDAO libroDAO = new LibroDAO();
+
+    private AdminCatalogService adminCatalogService;
+
+    @Override
+    public void init() throws ServletException {
+        this.adminCatalogService = ServiceFactory.adminCatalogService();
+    }
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        String idParam = request.getParameter("id");
 
+        String idParam = request.getParameter("id");
         if (idParam == null || idParam.isEmpty()) {
             response.sendError(HttpServletResponse.SC_BAD_REQUEST, "ID libro mancante");
             return;
@@ -26,21 +33,18 @@ public class EliminaLibroServlet extends HttpServlet {
 
         try {
             int idLibro = Integer.parseInt(idParam);
-            boolean eliminato = libroDAO.eliminaLibro(idLibro);
+            boolean eliminato = adminCatalogService.removeBook(idLibro);
 
             if (eliminato) {
-                response.sendRedirect(request.getContextPath() +
-                        "/admin/libri?success=Libro eliminato con successo");
+                response.sendRedirect(request.getContextPath() + "/admin/libri?success=Libro eliminato con successo");
             } else {
-                response.sendRedirect(request.getContextPath() +
-                        "/admin/libri?errore=Impossibile eliminare il libro. Potrebbe essere già stato rimosso o non esistere.");
+                response.sendRedirect(request.getContextPath() + "/admin/libri?errore=Impossibile eliminare il libro");
             }
+
         } catch (NumberFormatException e) {
             response.sendError(HttpServletResponse.SC_BAD_REQUEST, "ID libro non valido");
         } catch (Exception e) {
-            e.printStackTrace();
-            response.sendRedirect(request.getContextPath() +
-                    "/admin/libri?errore=Si è verificato un errore durante l'eliminazione del libro");
+            response.sendRedirect(request.getContextPath() + "/admin/libri?errore=Errore durante l'eliminazione del libro");
         }
     }
 }

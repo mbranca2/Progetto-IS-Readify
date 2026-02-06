@@ -13,34 +13,35 @@ import service.review.ReviewService;
 
 import java.io.IOException;
 
-@WebServlet("/recensioni/aggiungi")
+@WebServlet(name = "AggiungiRecensioneServlet", urlPatterns = {"/recensioni/aggiungi"})
 public class AggiungiRecensioneServlet extends HttpServlet {
-    private static final long serialVersionUID = 1L;
 
-    private final ReviewService reviewService = ServiceFactory.reviewService();
+    private ReviewService reviewService;
+
+    @Override
+    public void init() throws ServletException {
+        this.reviewService = ServiceFactory.reviewService();
+    }
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        String contextPath = request.getContextPath();
         HttpSession session = request.getSession(false);
         Utente utente = (session != null) ? (Utente) session.getAttribute("utente") : null;
 
         if (utente == null) {
-            response.sendRedirect(request.getContextPath() + "/login");
+            response.sendRedirect(contextPath + "/login");
             return;
         }
 
-        int idLibro;
-        int voto;
-
-        try {
-            idLibro = Integer.parseInt(request.getParameter("idLibro"));
-            voto = Integer.parseInt(request.getParameter("voto"));
-        } catch (Exception e) {
-            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Parametri non validi");
-            return;
-        }
-
+        int idLibro = parseIntSafe(request.getParameter("idLibro"));
+        int voto = parseIntSafe(request.getParameter("voto"));
         String commento = request.getParameter("commento");
+
+        if (idLibro <= 0) {
+            response.sendRedirect(contextPath + "/home?error=invalid_book");
+            return;
+        }
 
         Recensione recensione = new Recensione();
         recensione.setIdLibro(idLibro);
@@ -51,14 +52,17 @@ public class AggiungiRecensioneServlet extends HttpServlet {
         boolean ok = reviewService.addReview(recensione);
 
         if (ok) {
-            response.sendRedirect(request.getContextPath() + "/dettaglio-libro?id=" + idLibro + "&review=ok");
+            response.sendRedirect(contextPath + "/dettaglio-libro?id=" + idLibro + "&review=ok");
         } else {
-            response.sendRedirect(request.getContextPath() + "/dettaglio-libro?id=" + idLibro + "&review=err");
+            response.sendRedirect(contextPath + "/dettaglio-libro?id=" + idLibro + "&review=not_allowed");
         }
     }
 
-    @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        response.sendError(HttpServletResponse.SC_METHOD_NOT_ALLOWED);
+    private int parseIntSafe(String s) {
+        try {
+            return Integer.parseInt(s);
+        } catch (Exception e) {
+            return -1;
+        }
     }
 }

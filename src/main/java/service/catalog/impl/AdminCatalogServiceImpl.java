@@ -34,6 +34,18 @@ public class AdminCatalogServiceImpl implements AdminCatalogService {
     }
 
     @Override
+    public boolean addBook(Libro newBook) {
+        if (newBook == null) return false;
+        if (newBook.getTitolo() == null || newBook.getTitolo().trim().isEmpty()) return false;
+        if (newBook.getAutore() == null || newBook.getAutore().trim().isEmpty()) return false;
+        if (newBook.getPrezzo() == null || newBook.getPrezzo().compareTo(BigDecimal.ZERO) < 0) return false;
+        if (newBook.getIsbn() == null || newBook.getIsbn().trim().isEmpty()) return false;
+        if (newBook.getDisponibilita() < 0) return false;
+
+        return libroDAO.inserisciLibro(newBook);
+    }
+
+    @Override
     public boolean updateBook(Libro updatedBook) {
         if (updatedBook == null || updatedBook.getIdLibro() <= 0) {
             return false;

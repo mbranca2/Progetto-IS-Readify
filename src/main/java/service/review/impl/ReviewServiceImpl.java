@@ -1,6 +1,7 @@
 package service.review.impl;
 
 import model.bean.Recensione;
+import model.dao.OrdineDAO;
 import model.dao.RecensioneDAO;
 import service.review.ReviewService;
 
@@ -11,9 +12,11 @@ import java.util.Objects;
 public class ReviewServiceImpl implements ReviewService {
 
     private final RecensioneDAO recensioneDAO;
+    private final OrdineDAO ordineDAO;
 
-    public ReviewServiceImpl(RecensioneDAO recensioneDAO) {
+    public ReviewServiceImpl(RecensioneDAO recensioneDAO, OrdineDAO ordineDAO) {
         this.recensioneDAO = Objects.requireNonNull(recensioneDAO);
+        this.ordineDAO = Objects.requireNonNull(ordineDAO);
     }
 
     @Override
@@ -30,11 +33,19 @@ public class ReviewServiceImpl implements ReviewService {
     public boolean addReview(Recensione recensione) {
         if (recensione == null) return false;
 
-        if (recensione.getIdLibro() <= 0) return false;
-        if (recensione.getIdUtente() <= 0) return false;
+        int idLibro = recensione.getIdLibro();
+        int idUtente = recensione.getIdUtente();
+
+        if (idLibro <= 0) return false;
+        if (idUtente <= 0) return false;
 
         int voto = recensione.getVoto();
         if (voto < 1 || voto > 5) return false;
+
+        // RF_REC_1: recensione consentita solo se il libro è stato acquistato dall'utente
+        if (!ordineDAO.hasUserPurchasedBook(idUtente, idLibro)) {
+            return false;
+        }
 
         String commento = recensione.getCommento();
         if (commento == null) commento = "";

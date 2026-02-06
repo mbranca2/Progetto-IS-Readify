@@ -1,73 +1,40 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
-<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
+
 <!DOCTYPE html>
 <html lang="it">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>I miei ordini - Librorama</title>
+    <title>I miei ordini</title>
+
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/style.css">
+
     <style>
-        /* Stili di base */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: Arial, sans-serif;
-        }
-        
-        body {
-            background-color: #f5f5f5;
-            color: #333;
-            line-height: 1.6;
-        }
-        
         .container {
             max-width: 1200px;
             margin: 2rem auto;
             padding: 0 1rem;
         }
-        
+
         h1 {
+            margin-bottom: 2rem;
             color: #2c3e50;
-            margin-bottom: 1.5rem;
-            text-align: center;
         }
-        
+
         .no-orders {
             text-align: center;
-            padding: 2rem;
+            padding: 3rem;
             background: white;
             border-radius: 8px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            margin-top: 2rem;
         }
-        
-        .no-orders p {
+
+        .no-orders h2 {
             margin-bottom: 1rem;
-            color: #666;
         }
-        
-        .btn {
-            display: inline-block;
-            padding: 0.7rem 1.5rem;
-            background-color: #2e7d32;
-            color: white;
-            text-decoration: none;
-            border-radius: 4px;
-            font-weight: 600;
-            transition: background-color 0.2s;
-        }
-        
-        .btn:hover {
-            background-color: #1b5e20;
-        }
-        
-        /* Stili per la lista ordini */
-        .orders-list {
-            margin-top: 2rem;
-        }
-        
+
         .order-card {
             background: white;
             border-radius: 8px;
@@ -75,7 +42,7 @@
             margin-bottom: 1.5rem;
             overflow: hidden;
         }
-        
+
         .order-header {
             background-color: #f8f9fa;
             padding: 1rem 1.5rem;
@@ -85,16 +52,16 @@
             flex-wrap: wrap;
             gap: 1rem;
         }
-        
+
         .order-id {
             font-weight: 600;
             color: #2c3e50;
         }
-        
+
         .order-date {
             color: #666;
         }
-        
+
         .order-status {
             padding: 0.3rem 0.8rem;
             border-radius: 20px;
@@ -102,26 +69,26 @@
             font-weight: 600;
             text-transform: capitalize;
         }
-        
+
         .order-details {
             padding: 1.5rem;
         }
-        
+
         .order-items {
             margin-top: 1rem;
         }
-        
+
         .order-item {
             display: flex;
             padding: 1rem 0;
             border-bottom: 1px solid #eee;
             align-items: center;
         }
-        
+
         .order-item:last-child {
             border-bottom: none;
         }
-        
+
         .item-image {
             width: 80px;
             height: 100px;
@@ -129,20 +96,25 @@
             border-radius: 4px;
             margin-right: 1.5rem;
         }
-        
-        .item-details {
-            flex: 1;
+
+        .item-details h4 {
+            margin: 0 0 0.5rem 0;
+            color: #2c3e50;
         }
-        
+
+        .item-details p {
+            margin: 0.2rem 0;
+            color: #666;
+        }
+
         .order-total {
             margin-top: 1.5rem;
-            padding-top: 1.5rem;
-            border-top: 1px solid #eee;
             text-align: right;
-            font-size: 1.2rem;
+            font-size: 1.1rem;
             font-weight: 600;
+            color: #2c3e50;
         }
-        
+
         .order-actions {
             margin-top: 1.5rem;
             display: flex;
@@ -150,128 +122,116 @@
             gap: 1rem;
         }
 
-        
-        /* Responsive */
-        @media (max-width: 768px) {
-            .order-header {
-                flex-direction: column;
-            }
-            
-            .order-item {
-                flex-direction: column;
-                text-align: center;
-            }
-            
-            .item-image {
-                margin: 0 0 1rem 0;
-            }
-            
-            .order-actions {
-                flex-direction: column;
-            }
-            
-            .btn {
-                width: 100%;
-                text-align: center;
-            }
+        .btn {
+            display: inline-block;
+            padding: 0.7rem 1.2rem;
+            background-color: #3498db;
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn:hover {
+            background-color: #2980b9;
         }
     </style>
 </head>
-<body>
-    <jsp:include page="header.jsp" />
 
-    <div class="container">
-        <h1>I miei ordini</h1>
-        
-        <c:choose>
-            <c:when test="${empty ordini}">
-                <div class="no-orders">
-                    <h2>Nessun ordine effettuato</h2>
-                    <p>Non hai ancora effettuato nessun ordine nel nostro negozio.</p>
-                    <a href="${pageContext.request.contextPath}/libri" class="btn">Inizia a fare acquisti</a>
-                </div>
-            </c:when>
-            <c:otherwise>
-                <div class="orders-list">
-                    <c:forEach items="${ordini}" var="ordine">
-                        <div class="order-card">
-                            <div class="order-header">
-                                <div>
-                                    <span class="order-id">Ordine #${ordine.idOrdine}</span>
-                                    <span class="order-date">
-                                        - <fmt:formatDate value="${ordine.dataOrdine}" pattern="dd/MM/yyyy HH:mm" />
-                                    </span>
-                                </div>
-                                <span class="order-status status-${ordine.stato.toString().toLowerCase()}">
-                                    ${ordine.stato}
+<body>
+<jsp:include page="header.jsp" />
+
+<div class="container">
+    <h1>I miei ordini</h1>
+
+    <c:choose>
+        <c:when test="${empty ordini}">
+            <div class="no-orders">
+                <h2>Nessun ordine effettuato</h2>
+                <p>Non hai ancora effettuato nessun ordine nel nostro negozio.</p>
+                <a href="${pageContext.request.contextPath}/libri" class="btn">Inizia a fare acquisti</a>
+            </div>
+        </c:when>
+        <c:otherwise>
+            <div class="orders-list">
+                <c:forEach items="${ordini}" var="ordine">
+                    <div class="order-card">
+                        <div class="order-header">
+                            <div>
+                                <span class="order-id">Ordine #${ordine.idOrdine}</span>
+                                <span class="order-date">
+                                    - <fmt:formatDate value="${ordine.dataOrdine}" pattern="dd/MM/yyyy HH:mm" />
                                 </span>
                             </div>
-                            
-                            <div class="order-details">
-                                <div class="order-items">
-                                    <c:forEach items="${ordine.dettagli}" var="dettaglio">
-                                        <div class="order-item">
-                                            <img src="${pageContext.request.contextPath}/img/libri/copertine/${dettaglio.immagineCopertina != null ? dettaglio.immagineCopertina : 'default.jpg'}"
-                                                 alt="${dettaglio.titoloLibro}" 
-                                                 class="item-image"
-                                                 onerror="this.onerror=null; this.src='${pageContext.request.contextPath}/img/libri/copertine/default.jpg'"
-                                                 onload="if(this.naturalWidth === 0) this.src='${pageContext.request.contextPath}/img/libri/copertine/default.jpg'">
-                                            <div class="item-details">
-                                                <h4>${dettaglio.titoloLibro}</h4>
-                                                <p>Autore: ${dettaglio.autoreLibro}</p>
-                                                <p>ISBN: ${dettaglio.isbnLibro}</p>
-                                                <p>Quantità: ${dettaglio.quantita}</p>
-                                                <p>Prezzo: <fmt:formatNumber value="${dettaglio.prezzoUnitario}" type="currency" currencySymbol="€"/></p>
-                                            </div>
+
+                            <!-- FIX: usare name() per classi CSS (toString() è descrizione) -->
+                            <span class="order-status status-${ordine.stato.name().toLowerCase()}">
+                                    ${ordine.stato}
+                            </span>
+                        </div>
+
+                        <div class="order-details">
+                            <div class="order-items">
+                                <c:forEach items="${ordine.dettagli}" var="dettaglio">
+                                    <div class="order-item">
+                                        <img src="${pageContext.request.contextPath}/img/libri/copertine/${dettaglio.immagineCopertina != null ? dettaglio.immagineCopertina : 'default.jpg'}"
+                                             alt="${dettaglio.titoloLibro}"
+                                             class="item-image"
+                                             onerror="this.onerror=null; this.src='${pageContext.request.contextPath}/img/libri/copertine/default.jpg'"
+                                             onload="if(this.naturalWidth === 0) this.src='${pageContext.request.contextPath}/img/libri/copertine/default.jpg'">
+                                        <div class="item-details">
+                                            <h4>${dettaglio.titoloLibro}</h4>
+                                            <p>Autore: ${dettaglio.autoreLibro}</p>
+                                            <p>ISBN: ${dettaglio.isbnLibro}</p>
+                                            <p>Quantità: ${dettaglio.quantita}</p>
+                                            <p>Prezzo: <fmt:formatNumber value="${dettaglio.prezzoUnitario}" type="currency" currencySymbol="€"/></p>
                                         </div>
-                                    </c:forEach>
-                                </div>
-                                
-                                <div class="order-total">
-                                    Totale: <fmt:formatNumber value="${ordine.totale}" 
+                                    </div>
+                                </c:forEach>
+                            </div>
+
+                            <div class="order-total">
+                                Totale: <fmt:formatNumber value="${ordine.totale}"
                                                           type="currency" currencyCode="EUR" maxFractionDigits="2"/>
-                                </div>
-                                
-                                <div class="order-actions">
-                                    <c:if test="${ordine.stato == 'IN_ATTESA'}">
-                                        <button class="btn" onclick="annullaOrdine(${ordine.idOrdine})">
-                                            Annulla ordine
-                                        </button>
-                                    </c:if>
-                                </div>
+                            </div>
+
+                            <div class="order-actions">
+                                <!-- FIX: confronto corretto sul nome enum -->
+                                <c:if test="${ordine.stato.name() == 'IN_ATTESA'}">
+                                    <button class="btn" onclick="annullaOrdine(${ordine.idOrdine})">
+                                        Annulla ordine
+                                    </button>
+                                </c:if>
                             </div>
                         </div>
-                    </c:forEach>
-                </div>
-            </c:otherwise>
-        </c:choose>
-    </div>
+                    </div>
+                </c:forEach>
+            </div>
+        </c:otherwise>
+    </c:choose>
+</div>
 
-    <jsp:include page="footer.jsp" />
+<script>
+    function annullaOrdine(idOrdine) {
+        if (!confirm("Vuoi annullare questo ordine?")) return;
 
-    <script>
-        function annullaOrdine(ordineId) {
-            if (confirm('Sei sicuro di voler annullare questo ordine?')) {
-                fetch('${pageContext.request.contextPath}/annulla-ordine', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded',
-                    },
-                    body: 'id=' + ordineId
-                })
-                .then(response => {
-                    if (response.ok) {
-                        window.location.reload();
-                    } else {
-                        alert('Si è verificato un errore durante l\'annullamento dell\'ordine.');
-                    }
-                })
-                .catch(error => {
-                    console.error('Errore:', error);
-                    alert('Si è verificato un errore durante l\'annullamento dell\'ordine.');
-                });
+        const xhr = new XMLHttpRequest();
+        xhr.open("POST", "${pageContext.request.contextPath}/annulla-ordine", true);
+        xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+
+        xhr.onload = function() {
+            if (xhr.status === 200) {
+                location.reload();
+            } else {
+                alert("Impossibile annullare l'ordine.");
             }
-        }
-    </script>
+        };
+
+        xhr.send("idOrdine=" + encodeURIComponent(idOrdine));
+    }
+</script>
+
 </body>
 </html>

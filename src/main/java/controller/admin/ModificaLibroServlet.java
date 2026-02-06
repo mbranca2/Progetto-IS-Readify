@@ -7,24 +7,31 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import model.bean.Categoria;
 import model.bean.Libro;
-import model.dao.CategoriaDAO;
 import service.ServiceFactory;
 import service.catalog.AdminCatalogService;
+import service.catalog.CategoryService;
 
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 
 @WebServlet("/admin/libri/modifica")
 public class ModificaLibroServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
 
-    private final AdminCatalogService adminCatalogService = ServiceFactory.adminCatalogService();
+    private AdminCatalogService adminCatalogService;
+    private CategoryService categoryService;
+
+    @Override
+    public void init() throws ServletException {
+        this.adminCatalogService = ServiceFactory.adminCatalogService();
+        this.categoryService = ServiceFactory.categoryService();
+    }
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         String idParam = request.getParameter("id");
-
         if (idParam == null || idParam.isEmpty()) {
             response.sendError(HttpServletResponse.SC_BAD_REQUEST, "ID libro mancante");
             return;
@@ -39,7 +46,7 @@ public class ModificaLibroServlet extends HttpServlet {
                 return;
             }
 
-            List<Categoria> categorie = new CategoriaDAO().trovaTutteCategorie();
+            List<Categoria> categorie = categoryService.listAll();
             request.setAttribute("categorie", categorie);
             request.setAttribute("libro", libro);
             request.getRequestDispatcher("/WEB-INF/jsp/admin/modifica-libro.jsp").forward(request, response);
@@ -71,12 +78,16 @@ public class ModificaLibroServlet extends HttpServlet {
             libro.setAutore(request.getParameter("autore"));
 
             String prezzoStr = request.getParameter("prezzo");
-            libro.setPrezzo(new BigDecimal(prezzoStr.replace(",", ".")));
-
+            if (prezzoStr != null) prezzoStr = prezzoStr.replace(",", ".");
+            libro.setPrezzo(new BigDecimal(prezzoStr));
             libro.setDisponibilita(Integer.parseInt(request.getParameter("quantita")));
 
-            int idCategoria = Integer.parseInt(request.getParameter("categoria"));
-            libro.aggiungiCategoria(idCategoria);
+            String catStr = request.getParameter("categoria");
+            if (catStr != null && !catStr.isEmpty()) {
+                int idCategoria = Integer.parseInt(catStr);
+                libro.setCategorie(new ArrayList<>());
+                libro.aggiungiCategoria(idCategoria);
+            }
 
             libro.setDescrizione(request.getParameter("descrizione"));
 
@@ -88,9 +99,10 @@ public class ModificaLibroServlet extends HttpServlet {
             boolean aggiornato = adminCatalogService.updateBook(libro);
 
             if (aggiornato) {
-                response.sendRedirect(request.getContextPath() +
-                        "/admin/libri?success=Libro aggiornato con successo");
+                response.sendRedirect(request.getContextPath() + "/admin/libri?success=Libro aggiornato con successo");
             } else {
+                List<Categoria> categorie = categoryService.listAll();
+                request.setAttribute("categorie", categorie);
                 request.setAttribute("errore", "Impossibile aggiornare il libro");
                 request.setAttribute("libro", libro);
                 request.getRequestDispatcher("/WEB-INF/jsp/admin/modifica-libro.jsp").forward(request, response);

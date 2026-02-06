@@ -9,32 +9,44 @@ import jakarta.servlet.http.HttpSession;
 import model.bean.Categoria;
 import model.bean.Libro;
 import model.bean.Utente;
-import model.dao.CategoriaDAO;
-import model.dao.LibroDAO;
-import utils.DBManager;
+import service.ServiceFactory;
+import service.catalog.AdminCatalogService;
+import service.catalog.CatalogService;
+import service.catalog.CategoryService;
 
 import java.io.IOException;
 import java.math.BigDecimal;
-import java.sql.Connection;
-import java.sql.SQLException;
 import java.util.List;
 
 @WebServlet("/admin/libri")
 public class GestioneLibriServlet extends HttpServlet {
 
+    private CatalogService catalogService;
+    private CategoryService categoryService;
+    private AdminCatalogService adminCatalogService;
+
+    @Override
+    public void init() throws ServletException {
+        this.catalogService = ServiceFactory.catalogService();
+        this.categoryService = ServiceFactory.categoryService();
+        this.adminCatalogService = ServiceFactory.adminCatalogService();
+    }
+
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         HttpSession session = req.getSession(false);
-        if (session == null || session.getAttribute("utente") == null) {
+        Utente utente = (session != null) ? (Utente) session.getAttribute("utente") : null;
+        if (utente == null) {
             resp.sendRedirect(req.getContextPath() + "/login");
             return;
         }
-
-        Utente utente = (Utente) session.getAttribute("utente");
         if (!"admin".equals(utente.getRuolo())) {
             resp.sendError(HttpServletResponse.SC_FORBIDDEN);
             return;
         }
+
+        List<Categoria> categorie = categoryService.listAll();
+        req.setAttribute("categorie", categorie);
 
         String azione = req.getParameter("azione");
         if ("nuovo".equals(azione)) {
@@ -42,159 +54,209 @@ public class GestioneLibriServlet extends HttpServlet {
             return;
         }
 
-        String titolo = req.getParameter("titolo");
-        String autore = req.getParameter("autore");
-        String categoria = req.getParameter("categoria");
-        int pagina = (req.getParameter("pagina") != null) ? Integer.parseInt(req.getParameter("pagina")) : 1;
+        String titolo = trimToNull(req.getParameter("titolo"));
+        String autore = trimToNull(req.getParameter("autore"));
+        String categoria = trimToNull(req.getParameter("categoria"));
+
+        int pagina = parseIntSafe(req.getParameter("pagina"), 1);
         int elementiPerPagina = 10;
-        int offset = (pagina - 1) * elementiPerPagina;
 
-        LibroDAO libroDAO = new LibroDAO();
-        CategoriaDAO categoriaDAO = new CategoriaDAO();
+        List<Libro> libri;
+        int totalePagine = 1;
 
-        List<Categoria> categorie = categoriaDAO.trovaTutteCategorie();
-        req.setAttribute("categorie", categorie);
+        if (titolo == null && autore == null && categoria == null) {
+            libri = catalogService.listAll();
+        } else {
+            libri = catalogService.search(titolo, autore, categoria, pagina, elementiPerPagina);
+            int totale = catalogService.count(titolo, autore, categoria);
+            totalePagine = (int) Math.ceil((double) totale / elementiPerPagina);
 
-        try {
-            if (titolo == null && autore == null && categoria == null) {
-                System.out.println("[GestioneLibriServlet] Nessun filtro di ricerca, caricamento di tutti i libri");
-                List<Libro> libri;
-                try {
-                    libri = libroDAO.trovaTutti();
-                    System.out.println("[GestioneLibriServlet] Libri trovati: " + (libri != null ? libri.size() : "null"));
-                    if (libri != null) {
-                        for (Libro libro : libri) {
-                            System.out.println("[GestioneLibriServlet] Libro: " + libro.getTitolo() + " (ID: " + libro.getIdLibro() + ")");
-                        }
-                    }
-                    req.setAttribute("libri", libri);
-                } catch (Exception e) {
-                    System.err.println("[GestioneLibriServlet] Errore durante il recupero dei libri: " + e.getMessage());
-                    e.printStackTrace();
-                    throw e;
-                }
-            } else {
-                List<Libro> libri = libroDAO.trovaLibriConFiltro(titolo, autore, categoria, offset, elementiPerPagina);
-                System.out.println("[GestioneLibriServlet] Numero libri filtrati: " + (libri != null ? libri.size() : "null"));
-                req.setAttribute("libri", libri);
-
-                int totaleLibri = libroDAO.contaLibriConFiltro(titolo, autore, categoria);
-                int totalePagine = (int) Math.ceil((double) totaleLibri / elementiPerPagina);
-                req.setAttribute("totalePagine", totalePagine);
-                req.setAttribute("paginaCorrente", pagina);
-            }
-
-            HttpSession sessione = req.getSession();
-            sessione.setAttribute("titolo", titolo);
-            sessione.setAttribute("autore", autore);
-            sessione.setAttribute("categoria", categoria);
-
-            req.getRequestDispatcher("/WEB-INF/jsp/admin/gestione-libri.jsp").forward(req, resp);
-
-        } catch (Exception e) {
-            System.err.println("[GestioneLibriServlet] Errore: " + e.getMessage());
-            e.printStackTrace();
-            throw new ServletException("Errore nel GestioneLibriServlet: " + e.getMessage(), e);
+            req.setAttribute("totalePagine", totalePagine);
+            req.setAttribute("paginaCorrente", pagina);
         }
+
+        req.setAttribute("libri", libri);
+        session.setAttribute("titolo", titolo);
+        session.setAttribute("autore", autore);
+        session.setAttribute("categoria", categoria);
+
+        req.getRequestDispatcher("/WEB-INF/jsp/admin/gestione-libri.jsp").forward(req, resp);
     }
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        LibroDAO libroDAO = new LibroDAO();
+        HttpSession session = request.getSession(false);
+        Utente utente = (session != null) ? (Utente) session.getAttribute("utente") : null;
+        if (utente == null) {
+            response.sendRedirect(request.getContextPath() + "/login");
+            return;
+        }
+        if (!"admin".equals(utente.getRuolo())) {
+            response.sendError(HttpServletResponse.SC_FORBIDDEN);
+            return;
+        }
+
         String azione = request.getParameter("azione");
 
         if ("aggiungi".equals(azione)) {
             Libro libro = new Libro();
-            setLibroPropertiesFromRequest(libro, request);
-            libroDAO.inserisciLibro(libro);
+            setLibroPropertiesFromRequestForInsert(libro, request);
 
-            HttpSession session = request.getSession();
-            String titolo = (String) session.getAttribute("titolo");
-            String autore = (String) session.getAttribute("autore");
-            String categoria = (String) session.getAttribute("categoria");
-            StringBuilder url = new StringBuilder("../admin/libri");
+            boolean ok = adminCatalogService.addBook(libro);
 
-            if (titolo != null || autore != null || categoria != null) {
-                url.append("?");
-                if (titolo != null) url.append("titolo=").append(titolo);
-                if (autore != null) url.append("&autore=").append(autore);
-                if (categoria != null) url.append("&categoria=").append(categoria);
-            }
-            response.sendRedirect(url.toString());
-
-        } else if ("modifica".equals(azione)) {
-            int id = Integer.parseInt(request.getParameter("id"));
-            Libro libro = libroDAO.trovaLibroPerId(id);
-            if (libro != null) {
-                setLibroPropertiesFromRequest(libro, request);
-
-                Connection conn = null;
-                try {
-                    conn = DBManager.getConnection();
-                    conn.setAutoCommit(false);
-
-                    boolean ok = libroDAO.aggiornaLibro(conn, libro);
-                    if (!ok) {
-                        conn.rollback();
-                        throw new ServletException("Aggiornamento libro fallito");
-                    }
-
-                    conn.commit();
-
-                } catch (SQLException e) {
-                    try {
-                        if (conn != null) conn.rollback();
-                    } catch (SQLException ignored) {}
-                    throw new ServletException("Errore durante l'aggiornamento del libro", e);
-
-                } finally {
-                    try {
-                        if (conn != null) {
-                            conn.setAutoCommit(true);
-                            conn.close();
-                        }
-                    } catch (SQLException ignored) {}
-                }
-
-                HttpSession session = request.getSession();
-                String titolo = (String) session.getAttribute("titolo");
-                String autore = (String) session.getAttribute("autore");
-                String categoria = (String) session.getAttribute("categoria");
-                StringBuilder url = new StringBuilder(request.getContextPath() + "/admin/libri");
-
-                if (titolo != null || autore != null || categoria != null) {
-                    url.append("?");
-                    if (titolo != null) url.append("titolo=").append(titolo);
-                    if (autore != null) url.append("&autore=").append(autore);
-                    if (categoria != null) url.append("&categoria=").append(categoria);
-                }
-                response.sendRedirect(url.toString());
+            if (!ok) {
+                request.setAttribute("errore", "Impossibile inserire il libro. Verifica i dati.");
+                request.getRequestDispatcher("/WEB-INF/jsp/admin/inserisciLibro.jsp").forward(request, response);
+                return;
             }
 
-        } else if ("elimina".equals(azione)) {
-            int id = Integer.parseInt(request.getParameter("id"));
-            libroDAO.eliminaLibro(id);
+            response.sendRedirect(buildRedirectToAdminLibriWithFilters(request));
+            return;
+        }
 
-            HttpSession session = request.getSession();
-            String titolo = (String) session.getAttribute("titolo");
-            String autore = (String) session.getAttribute("autore");
-            String categoria = (String) session.getAttribute("categoria");
-            StringBuilder url = new StringBuilder(request.getContextPath() + "/admin/libri");
-
-            if (titolo != null || autore != null || categoria != null) {
-                url.append("?");
-                if (titolo != null) url.append("titolo=").append(titolo);
-                if (autore != null) url.append("&autore=").append(autore);
-                if (categoria != null) url.append("&categoria=").append(categoria);
+        if ("modifica".equals(azione)) {
+            int id = parseIntSafe(request.getParameter("id"), -1);
+            if (id <= 0) {
+                response.sendError(HttpServletResponse.SC_BAD_REQUEST, "ID libro mancante o non valido");
+                return;
             }
-            response.sendRedirect(url.toString());
+
+            Libro libro = adminCatalogService.getBookById(id);
+            if (libro == null) {
+                response.sendRedirect(request.getContextPath() + "/admin/libri?errore=Libro non trovato");
+                return;
+            }
+
+            applyLibroUpdateFromRequest(libro, request);
+
+            boolean ok = adminCatalogService.updateBook(libro);
+            if (!ok) {
+                response.sendRedirect(request.getContextPath() + "/admin/libri?errore=Impossibile aggiornare il libro");
+                return;
+            }
+
+            response.sendRedirect(buildRedirectToAdminLibriWithFilters(request));
+            return;
+        }
+
+        if ("elimina".equals(azione)) {
+            int id = parseIntSafe(request.getParameter("id"), -1);
+            if (id <= 0) {
+                response.sendError(HttpServletResponse.SC_BAD_REQUEST, "ID libro mancante o non valido");
+                return;
+            }
+
+            boolean ok = adminCatalogService.removeBook(id);
+            if (!ok) {
+                response.sendRedirect(request.getContextPath() + "/admin/libri?errore=Impossibile eliminare il libro");
+                return;
+            }
+
+            response.sendRedirect(buildRedirectToAdminLibriWithFilters(request));
+            return;
+        }
+
+        response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Azione non valida");
+    }
+
+    private void setLibroPropertiesFromRequestForInsert(Libro libro, HttpServletRequest request) {
+        libro.setTitolo(trimToEmpty(request.getParameter("titolo")));
+        libro.setAutore(trimToEmpty(request.getParameter("autore")));
+
+        String prezzoStr = request.getParameter("prezzo");
+        if (prezzoStr != null) prezzoStr = prezzoStr.replace(",", ".");
+        try {
+            libro.setPrezzo(new BigDecimal(prezzoStr));
+        } catch (Exception e) {
+            libro.setPrezzo(BigDecimal.ZERO);
+        }
+
+        libro.setIsbn(trimToEmpty(request.getParameter("isbn")));
+        libro.setDescrizione(trimToEmpty(request.getParameter("descrizione")));
+        libro.setDisponibilita(parseIntSafe(request.getParameter("disponibilita"), 0));
+        libro.setCopertina(trimToEmpty(request.getParameter("copertina")));
+    }
+
+    private void applyLibroUpdateFromRequest(Libro libro, HttpServletRequest request) {
+        String titolo = trimToNull(request.getParameter("titolo"));
+        if (titolo != null) libro.setTitolo(titolo);
+
+        String autore = trimToNull(request.getParameter("autore"));
+        if (autore != null) libro.setAutore(autore);
+
+        String prezzoStr = trimToNull(request.getParameter("prezzo"));
+        if (prezzoStr != null) {
+            prezzoStr = prezzoStr.replace(",", ".");
+            try {
+                libro.setPrezzo(new BigDecimal(prezzoStr));
+            } catch (Exception ignored) {}
+        }
+
+        String disp = trimToNull(request.getParameter("disponibilita"));
+        if (disp != null) {
+            int d = parseIntSafe(disp, libro.getDisponibilita());
+            libro.setDisponibilita(Math.max(0, d));
+        }
+
+        String isbn = trimToNull(request.getParameter("isbn"));
+        if (isbn != null) libro.setIsbn(isbn);
+
+        String descrizione = trimToNull(request.getParameter("descrizione"));
+        if (descrizione != null) libro.setDescrizione(descrizione);
+
+        String copertina = trimToNull(request.getParameter("copertina"));
+        if (copertina != null) libro.setCopertina(copertina);
+    }
+
+    private String buildRedirectToAdminLibriWithFilters(HttpServletRequest request) {
+        HttpSession session = request.getSession(false);
+        String titolo = (session != null) ? (String) session.getAttribute("titolo") : null;
+        String autore = (session != null) ? (String) session.getAttribute("autore") : null;
+        String categoria = (session != null) ? (String) session.getAttribute("categoria") : null;
+
+        StringBuilder url = new StringBuilder(request.getContextPath() + "/admin/libri");
+
+        if (titolo != null || autore != null || categoria != null) {
+            url.append("?");
+            boolean first = true;
+
+            if (titolo != null) {
+                url.append("titolo=").append(encode(titolo));
+                first = false;
+            }
+            if (autore != null) {
+                if (!first) url.append("&");
+                url.append("autore=").append(encode(autore));
+                first = false;
+            }
+            if (categoria != null) {
+                if (!first) url.append("&");
+                url.append("categoria=").append(encode(categoria));
+            }
+        }
+
+        return url.toString();
+    }
+
+    private String encode(String s) {
+        return s.replace(" ", "%20"); // semplice e sufficiente per i tuoi filtri base
+    }
+
+    private int parseIntSafe(String s, int def) {
+        try {
+            return Integer.parseInt(s);
+        } catch (Exception e) {
+            return def;
         }
     }
 
-    private void setLibroPropertiesFromRequest(Libro libro, HttpServletRequest request) {
-        libro.setTitolo(request.getParameter("titolo"));
-        libro.setAutore(request.getParameter("autore"));
-        libro.setPrezzo(new BigDecimal(request.getParameter("prezzo")));
-        libro.setDisponibilita(Integer.parseInt(request.getParameter("disponibilita")));
+    private String trimToNull(String s) {
+        if (s == null) return null;
+        s = s.trim();
+        return s.isEmpty() ? null : s;
+    }
+
+    private String trimToEmpty(String s) {
+        return (s == null) ? "" : s.trim();
     }
 }

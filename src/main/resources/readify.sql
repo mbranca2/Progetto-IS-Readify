@@ -78,8 +78,7 @@ CREATE TABLE Ordine (
     id_utente INT NOT NULL,
     id_indirizzo INT,
     data_ordine DATETIME DEFAULT CURRENT_TIMESTAMP,
-    stato ENUM('in_elaborazione', 'spedito', 'consegnato', 'annullato') DEFAULT 'in_elaborazione',
-    totale DECIMAL(10,2),
+    stato ENUM('in_attesa', 'pagato', 'in_elaborazione', 'spedito', 'consegnato', 'annullato', 'rimborsato') DEFAULT 'in_attesa',    totale DECIMAL(10,2),
     FOREIGN KEY (id_utente) REFERENCES Utente(id_utente),
     FOREIGN KEY (id_indirizzo) REFERENCES Indirizzo(id_indirizzo),
     CONSTRAINT chk_totale CHECK (totale >= 0)
@@ -110,9 +109,9 @@ CREATE TABLE Recensione (
 );
 
 INSERT INTO Utente (email, password_cifrata, nome, cognome, ruolo, telefono) VALUES
-('admin@librorama.it', ('admin123'), 'Admin', 'Sistema', 'admin', '1234567890'),
-('mario.rossi@email.com', ('password123'), 'Mario', 'Rossi', 'registrato', '3456789012'),
-('laura.bianchi@email.com', ('password123'), 'Laura', 'Bianchi', 'registrato', '4567890123');
+('admin@librorama.it', SHA1('admin123'), 'Admin', 'Sistema', 'admin', '1234567890'),
+('mario.rossi@email.com', SHA1('password123'), 'Mario', 'Rossi', 'registrato', '3456789012'),
+('laura.bianchi@email.com', SHA1('password123'), 'Laura', 'Bianchi', 'registrato', '4567890123');
 
 INSERT INTO Indirizzo (id_utente, via, citta, cap, provincia, paese) VALUES
 (2, 'Via Roma 123', 'Milano', '20121', 'MI', 'Italia'),
