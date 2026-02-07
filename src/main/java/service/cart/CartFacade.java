@@ -1,17 +1,16 @@
 package service.cart;
 
-import jakarta.servlet.http.HttpSession;
 import model.bean.Carrello;
 
 public interface CartFacade {
 
-    void syncAfterLogin(int idUtente, Carrello carrelloTemporaneo, HttpSession session);
+    Carrello syncAfterLogin(int idUtente, Carrello carrelloTemporaneo);
 
-    Carrello getCurrentCart(Integer idUtente, HttpSession session);
+    Carrello getCurrentCart(Integer idUtente, Carrello sessionCart);
 
-    boolean addBook(Integer idUtente, HttpSession session, int idLibro, int quantita);
+    boolean addBook(Integer idUtente, Carrello cart, int idLibro, int quantita);
 
-    boolean updateQuantity(Integer idUtente, HttpSession session, int idLibro, int nuovaQuantita);
+    boolean updateQuantity(Integer idUtente, Carrello cart, int idLibro, int nuovaQuantita);
 
-    boolean removeBook(Integer idUtente, HttpSession session, int idLibro);
+    boolean removeBook(Integer idUtente, Carrello cart, int idLibro);
 }

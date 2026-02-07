@@ -6,14 +6,15 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import model.bean.Utente;
-import model.dao.UtenteDAO;
+import service.ServiceFactory;
+import service.account.AdminUserService;
 import utils.HashUtil;
 
 import java.io.IOException;
 
 @WebServlet("/admin/utenti/modifica")
 public class ModificaUtenteServlet extends HttpServlet {
-    private final UtenteDAO utenteDAO = new UtenteDAO();
+    private final AdminUserService adminUserService = ServiceFactory.adminUserService();
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
@@ -26,7 +27,7 @@ public class ModificaUtenteServlet extends HttpServlet {
 
         try {
             int id = Integer.parseInt(idParam);
-            Utente utente = utenteDAO.trovaUtentePerId(id);
+            Utente utente = adminUserService.getById(id);
 
             if (utente == null) {
                 response.sendError(HttpServletResponse.SC_NOT_FOUND, "Utente non trovato");
@@ -51,7 +52,7 @@ public class ModificaUtenteServlet extends HttpServlet {
 
         try {
             int id = Integer.parseInt(idParam);
-            Utente utente = utenteDAO.trovaUtentePerId(id);
+            Utente utente = adminUserService.getById(id);
 
             if (utente == null) {
                 response.sendError(HttpServletResponse.SC_NOT_FOUND, "Utente non trovato");
@@ -88,7 +89,7 @@ public class ModificaUtenteServlet extends HttpServlet {
             }
 
             utente.setRuolo(ruolo.equals("AMMINISTRATORE") ? "admin" : "registrato");
-            utenteDAO.aggiornaUtente(utente);
+            adminUserService.update(utente);
             response.sendRedirect(request.getContextPath() + "/admin/utenti?success=Utente modificato con successo");
         } catch (NumberFormatException e) {
             response.sendError(HttpServletResponse.SC_BAD_REQUEST, "ID utente non valido");

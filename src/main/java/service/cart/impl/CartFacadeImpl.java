@@ -1,6 +1,5 @@
 package service.cart.impl;
 
-import jakarta.servlet.http.HttpSession;
 import model.bean.Carrello;
 import model.bean.Libro;
 import model.dao.CarrelloDAO;
@@ -21,61 +20,47 @@ public class CartFacadeImpl implements CartFacade {
     }
 
     @Override
-    public void syncAfterLogin(int idUtente, Carrello carrelloTemporaneo, HttpSession session) {
-        // Caso 1: c'è un carrello guest con articoli => prova a salvarlo e lo metti in sessione
+    public Carrello syncAfterLogin(int idUtente, Carrello carrelloTemporaneo) {
         if (carrelloTemporaneo != null
                 && carrelloTemporaneo.getArticoli() != null
                 && !carrelloTemporaneo.getArticoli().isEmpty()) {
 
             try {
                 carrelloDAO.salvaCarrello(idUtente, carrelloTemporaneo);
-                session.setAttribute("carrello", carrelloTemporaneo);
             } catch (SQLException e) {
                 System.err.println("Errore durante il salvataggio del carrello: " + e.getMessage());
-                // fallback: mantieni quello temporaneo in sessione
-                session.setAttribute("carrello", carrelloTemporaneo);
             }
-            return;
+            return carrelloTemporaneo;
         }
 
-        // Caso 2: niente carrello guest => carica da DB (o vuoto)
         try {
             Carrello carrelloDB = carrelloDAO.getCarrelloByUtente(idUtente);
-            if (carrelloDB != null) {
-                session.setAttribute("carrello", carrelloDB);
-            } else {
-                session.setAttribute("carrello", new Carrello());
-            }
+            return (carrelloDB != null) ? carrelloDB : new Carrello();
         } catch (SQLException e) {
             System.err.println("Errore durante il caricamento del carrello: " + e.getMessage());
-            session.setAttribute("carrello", new Carrello());
+            return new Carrello();
         }
     }
 
     @Override
-    public Carrello getCurrentCart(Integer idUtente, HttpSession session) {
-        Carrello cart = (Carrello) session.getAttribute("carrello");
-        if (cart != null) return cart;
+    public Carrello getCurrentCart(Integer idUtente, Carrello sessionCart) {
+        if (sessionCart != null) return sessionCart;
 
         if (idUtente != null) {
             try {
                 Carrello carrelloDB = carrelloDAO.getCarrelloByUtente(idUtente);
-                cart = (carrelloDB != null) ? carrelloDB : new Carrello();
+                return (carrelloDB != null) ? carrelloDB : new Carrello();
             } catch (SQLException e) {
                 System.err.println("Errore durante il caricamento del carrello: " + e.getMessage());
-                cart = new Carrello();
+                return new Carrello();
             }
-        } else {
-            cart = new Carrello();
         }
-
-        session.setAttribute("carrello", cart);
-        return cart;
+        return new Carrello();
     }
 
     @Override
-    public boolean addBook(Integer idUtente, HttpSession session, int idLibro, int quantita) {
-        Carrello cart = getCurrentCart(idUtente, session);
+    public boolean addBook(Integer idUtente, Carrello cart, int idLibro, int quantita) {
+        if (cart == null) return false;
 
         Libro libro = libroDAO.trovaLibroPerId(idLibro);
         if (libro == null) return false;
@@ -83,28 +68,23 @@ public class CartFacadeImpl implements CartFacade {
         boolean ok = cart.aggiungiLibro(libro, quantita);
         if (!ok) return false;
 
-        session.setAttribute("carrello", cart);
-
         if (idUtente != null) {
             try {
                 carrelloDAO.salvaCarrello(idUtente, cart);
             } catch (SQLException e) {
                 System.err.println("Errore durante il salvataggio del carrello: " + e.getMessage());
-                // manteniamo il cart in sessione comunque
             }
         }
         return true;
     }
 
     @Override
-    public boolean updateQuantity(Integer idUtente, HttpSession session, int idLibro, int nuovaQuantita) {
-        Carrello cart = getCurrentCart(idUtente, session);
+    public boolean updateQuantity(Integer idUtente, Carrello cart, int idLibro, int nuovaQuantita) {
+        if (cart == null) return false;
 
         boolean ok = cart.aggiornaQuantita(idLibro, nuovaQuantita);
         if (!ok) return false;
 
-        session.setAttribute("carrello", cart);
-
         if (idUtente != null) {
             try {
                 carrelloDAO.salvaCarrello(idUtente, cart);
@@ -116,13 +96,11 @@ public class CartFacadeImpl implements CartFacade {
     }
 
     @Override
-    public boolean removeBook(Integer idUtente, HttpSession session, int idLibro) {
-        Carrello cart = getCurrentCart(idUtente, session);
+    public boolean removeBook(Integer idUtente, Carrello cart, int idLibro) {
+        if (cart == null) return false;
 
         boolean ok = cart.rimuoviLibro(idLibro);
         if (!ok) return false;
-
-        session.setAttribute("carrello", cart);
 
         if (idUtente != null) {
             try {

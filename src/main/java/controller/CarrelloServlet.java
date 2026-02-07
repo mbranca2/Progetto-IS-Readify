@@ -32,7 +32,8 @@ public class CarrelloServlet extends HttpServlet {
 
         Integer idUtente = resolveUserId(session);
 
-        Carrello carrello = cartFacade.getCurrentCart(idUtente, session);
+        Carrello carrello = cartFacade.getCurrentCart(idUtente, (Carrello) session.getAttribute("carrello"));
+        session.setAttribute("carrello", carrello);
 
         String azione = request.getParameter("azione");
         String idLibroParam = request.getParameter("idLibro");
@@ -56,13 +57,13 @@ public class CarrelloServlet extends HttpServlet {
                         quantita = Integer.parseInt(qParam);
                     }
 
-                    successo = cartFacade.addBook(idUtente, session, idLibro, quantita);
+                    successo = cartFacade.addBook(idUtente, carrello, idLibro, quantita);
                     messaggio = successo ? "Libro aggiunto al carrello" : "Quantità non disponibile";
                     break;
                 }
 
                 case "rimuovi": {
-                    successo = cartFacade.removeBook(idUtente, session, idLibro);
+                    successo = cartFacade.removeBook(idUtente, carrello, idLibro);
                     messaggio = successo ? "Libro rimosso dal carrello" : "Libro non trovato";
                     break;
                 }
@@ -75,7 +76,7 @@ public class CarrelloServlet extends HttpServlet {
                     }
                     int nuovaQuantita = Integer.parseInt(qParam);
 
-                    successo = cartFacade.updateQuantity(idUtente, session, idLibro, nuovaQuantita);
+                    successo = cartFacade.updateQuantity(idUtente, carrello, idLibro, nuovaQuantita);
                     messaggio = successo ? "Quantità aggiornata" : "Errore nell'aggiornamento";
                     break;
                 }
@@ -85,7 +86,7 @@ public class CarrelloServlet extends HttpServlet {
                     return;
             }
 
-            carrello = (Carrello) session.getAttribute("carrello");
+            session.setAttribute("carrello", carrello);
 
             if (isAjaxRequest(request)) {
                 inviaRispostaJSON(response, successo, messaggio, carrello);
@@ -106,7 +107,8 @@ public class CarrelloServlet extends HttpServlet {
         HttpSession session = request.getSession(true);
         Integer idUtente = resolveUserId(session);
 
-        Carrello carrello = cartFacade.getCurrentCart(idUtente, session);
+        Carrello carrello = cartFacade.getCurrentCart(idUtente, (Carrello) session.getAttribute("carrello"));
+        session.setAttribute("carrello", carrello);
 
         request.setAttribute("carrello", carrello);
         request.getRequestDispatcher("/WEB-INF/jsp/visualizzaCarrello.jsp").forward(request, response);

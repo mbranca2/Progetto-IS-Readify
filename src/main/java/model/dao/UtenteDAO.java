@@ -102,6 +102,7 @@ public class UtenteDAO {
         utente.setCognome(rs.getString("cognome"));
         utente.setRuolo(rs.getString("ruolo"));
         utente.setTelefono(rs.getString("telefono"));
+        utente.setDataRegistrazione(rs.getTimestamp("data_registrazione"));
         return utente;
     }
 
@@ -147,6 +148,7 @@ public class UtenteDAO {
                                 rs.getString("ruolo"),
                                 rs.getString("telefono")
                         );
+                        user.setDataRegistrazione(rs.getTimestamp("data_registrazione"));
                     }
                 }
             }

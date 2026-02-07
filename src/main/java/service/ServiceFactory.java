@@ -2,7 +2,9 @@ package service;
 
 import model.dao.*;
 import service.account.AccountService;
+import service.account.AdminUserService;
 import service.account.impl.AccountServiceImpl;
+import service.account.impl.AdminUserServiceImpl;
 import service.address.AddressService;
 import service.address.impl.AddressServiceImpl;
 import service.cart.CartFacade;
@@ -29,6 +31,10 @@ public class ServiceFactory {
 
     public static AccountService accountService() {
         return new AccountServiceImpl(new UtenteDAO(), new IndirizzoDAO());
+    }
+
+    public static AdminUserService adminUserService() {
+        return new AdminUserServiceImpl(new UtenteDAO());
     }
 
     public static AddressService addressService() {

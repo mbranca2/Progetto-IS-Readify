@@ -8,14 +8,17 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import model.bean.Indirizzo;
 import model.bean.Utente;
-import model.dao.IndirizzoDAO;
-import model.dao.UtenteDAO;
+import service.ServiceFactory;
+import service.account.AccountService;
+import service.address.AddressService;
 
 import java.io.IOException;
+import java.util.List;
 
 @WebServlet("/profilo")
 public class GestioneAccountServlet extends HttpServlet {
-    private final IndirizzoDAO indirizzoDAO = new IndirizzoDAO();
+    private final AddressService addressService = ServiceFactory.addressService();
+    private final AccountService accountService = ServiceFactory.accountService();
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -27,9 +30,9 @@ public class GestioneAccountServlet extends HttpServlet {
 
         if (session.getAttribute("indirizzo") == null) {
             Utente utente = (Utente) session.getAttribute("utente");
-            Indirizzo indirizzo = indirizzoDAO.trovaIndirizzoPerIdUtente(utente.getIdUtente());
-            if (indirizzo != null) {
-                session.setAttribute("indirizzo", indirizzo);
+            List<Indirizzo> indirizzi = addressService.listByUser(utente.getIdUtente());
+            if (!indirizzi.isEmpty()) {
+                session.setAttribute("indirizzo", indirizzi.get(0));
             }
         }
 
@@ -63,9 +66,7 @@ public class GestioneAccountServlet extends HttpServlet {
         utente.setEmail(email.trim().toLowerCase());
         utente.setTelefono(telefono != null ? telefono.trim() : null);
 
-        UtenteDAO utenteDAO = new UtenteDAO();
-
-        boolean aggiornato = utenteDAO.aggiornaUtente(utente);
+        boolean aggiornato = accountService.updateProfile(utente);
         if (aggiornato) {
             session.setAttribute("utente", utente);
             req.setAttribute("successo", "Profilo aggiornato con successo");

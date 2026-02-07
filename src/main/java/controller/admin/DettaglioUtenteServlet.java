@@ -6,13 +6,14 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import model.bean.Utente;
-import model.dao.UtenteDAO;
+import service.ServiceFactory;
+import service.account.AdminUserService;
 
 import java.io.IOException;
 
 @WebServlet("/admin/dettaglio-utenti/*")
 public class DettaglioUtenteServlet extends HttpServlet {
-    private final UtenteDAO utenteDAO = new UtenteDAO();
+    private final AdminUserService adminUserService = ServiceFactory.adminUserService();
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
@@ -26,7 +27,7 @@ public class DettaglioUtenteServlet extends HttpServlet {
         try {
             String idParam = pathInfo.substring(1);
             int idUtente = Integer.parseInt(idParam);
-            Utente utente = utenteDAO.trovaUtentePerId(idUtente);
+            Utente utente = adminUserService.getById(idUtente);
 
             if (utente == null) {
                 response.sendError(HttpServletResponse.SC_NOT_FOUND, "Utente non trovato");

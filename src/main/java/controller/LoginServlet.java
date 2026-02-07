@@ -89,7 +89,8 @@ public class LoginServlet extends HttpServlet {
             newSession.setAttribute("idUtente", utente.getIdUtente());
 
             // --- Carrello: delega alla Facade ---
-            cartFacade.syncAfterLogin(utente.getIdUtente(), carrelloTemporaneo, newSession);
+            Carrello carrello = cartFacade.syncAfterLogin(utente.getIdUtente(), carrelloTemporaneo);
+            newSession.setAttribute("carrello", carrello);
 
             String redirectAfterLogin = (String) newSession.getAttribute("redirectAfterLogin");
             if (redirectAfterLogin != null && !redirectAfterLogin.isEmpty()) {

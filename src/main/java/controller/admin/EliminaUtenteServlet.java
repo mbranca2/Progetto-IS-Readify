@@ -5,13 +5,16 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import model.dao.UtenteDAO;
+import model.bean.Utente;
+import service.ServiceFactory;
+import service.account.AdminUserService;
 
 import java.io.IOException;
 
 @WebServlet("/admin/utenti/elimina")
 public class EliminaUtenteServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
+    private final AdminUserService adminUserService = ServiceFactory.adminUserService();
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
@@ -29,14 +32,13 @@ public class EliminaUtenteServlet extends HttpServlet {
 
         try {
             int idUtente = Integer.parseInt(idParam);
-            UtenteDAO utenteDAO = new UtenteDAO();
-
-            if (utenteDAO.trovaUtentePerId(idUtente) == null) {
+            Utente utente = adminUserService.getById(idUtente);
+            if (utente == null) {
                 inviaErrore(response, "Utente non trovato", HttpServletResponse.SC_NOT_FOUND);
                 return;
             }
 
-            boolean eliminato = utenteDAO.eliminaUtente(idUtente);
+            boolean eliminato = adminUserService.delete(idUtente);
 
             if (eliminato) {
                 response.sendRedirect(request.getContextPath() + "/admin/utenti?success=Utente eliminato con successo");

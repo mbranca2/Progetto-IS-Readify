@@ -10,8 +10,8 @@ import model.bean.Carrello;
 import model.bean.Indirizzo;
 import model.bean.Ordine;
 import model.bean.Utente;
-import model.dao.IndirizzoDAO;
 import service.ServiceFactory;
+import service.account.AccountService;
 import service.address.AddressService;
 import service.order.OrderService;
 import service.order.OrderServiceException;
@@ -26,13 +26,13 @@ public class ConfermaOrdineServlet extends HttpServlet {
 
     private OrderService orderService;
     private AddressService addressService;
-    private IndirizzoDAO indirizzoDAO;
+    private AccountService accountService;
 
     @Override
     public void init() throws ServletException {
         this.orderService = ServiceFactory.orderService();
         this.addressService = ServiceFactory.addressService();
-        this.indirizzoDAO = new IndirizzoDAO();
+        this.accountService = ServiceFactory.accountService();
     }
 
     @Override
@@ -116,7 +116,7 @@ public class ConfermaOrdineServlet extends HttpServlet {
             indirizzo.setProvincia(ValidatoreForm.pulisciInput(provincia).toUpperCase());
             indirizzo.setPaese(ValidatoreForm.pulisciInput(paese));
 
-            if (!indirizzoDAO.inserisciIndirizzo(indirizzo)) {
+            if (!accountService.addAddress(utente.getIdUtente(), indirizzo)) {
                 request.setAttribute("errore", "Errore durante il salvataggio dell'indirizzo.");
                 forwardToPayment(request, response, utente, "new");
                 return null;

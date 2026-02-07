@@ -1,6 +1,7 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
+<%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
 <!DOCTYPE html>
 <html lang="it">
 <head>
@@ -27,48 +28,52 @@
                     <div class="alert alert-danger">${errore}</div>
                 </c:if>
 
-                <c:set var="totale" value="0"/>
-                <c:if test="${not empty sessionScope.carrello and not empty sessionScope.carrello.articoli}">
-                    <c:forEach items="${sessionScope.carrello.articoli}" var="articolo">
-                        <c:set var="totale" value="${totale + (articolo.libro.prezzo * articolo.quantita)}"/>
-                    </c:forEach>
-                </c:if>
+                <c:choose>
+                    <c:when test="${not empty sessionScope.carrello}">
+                        <c:set var="totale" value="${sessionScope.carrello.totale}"/>
+                    </c:when>
+                    <c:otherwise>
+                        <c:set var="totale" value="0"/>
+                    </c:otherwise>
+                </c:choose>
 
                 <form id="payment-form" action="${pageContext.request.contextPath}/conferma-ordine" method="post">
                     <div class="panel-block">
                         <div class="panel-title">Indirizzo di spedizione</div>
 
-                        <c:choose>
-                            <c:when test="${not empty indirizzi}">
-                                <div class="form-group">
-                                    <label for="indirizzoSpedizione" class="form-label">Seleziona un indirizzo</label>
-                                    <select id="indirizzoSpedizione" name="indirizzoSpedizione" class="form-select" required>
-                                        <c:choose>
-                                            <c:when test="${empty indirizzoSpedizione}">
-                                                <option value="" disabled selected>Seleziona un indirizzo</option>
-                                            </c:when>
-                                            <c:otherwise>
-                                                <option value="" disabled>Seleziona un indirizzo</option>
-                                            </c:otherwise>
-                                        </c:choose>
-                                        <c:forEach items="${indirizzi}" var="ind">
-                                            <c:choose>
-                                                <c:when test="${indirizzoSpedizione == ind.idIndirizzo}">
-                                                    <option value="${ind.idIndirizzo}" selected>
-                                                        ${ind.via}, ${ind.cap} ${ind.citta} (${ind.provincia}) - ${ind.paese}
-                                                    </option>
-                                                </c:when>
+                <c:set var="indirizzoSpedizioneVal" value="${not empty indirizzoSpedizione ? indirizzoSpedizione : param.indirizzoSpedizione}"/>
+                <c:set var="indirizzoSpedizioneIsNumeric" value="${not empty indirizzoSpedizioneVal and fn:matches(indirizzoSpedizioneVal, '^[0-9]+$')}" />
+                <c:choose>
+                    <c:when test="${not empty indirizzi}">
+                        <div class="form-group">
+                            <label for="indirizzoSpedizione" class="form-label">Seleziona un indirizzo</label>
+                            <select id="indirizzoSpedizione" name="indirizzoSpedizione" class="form-select" required>
+                                <c:choose>
+                                    <c:when test="${empty indirizzoSpedizioneVal}">
+                                        <option value="" disabled selected>Seleziona un indirizzo</option>
+                                    </c:when>
+                                    <c:otherwise>
+                                        <option value="" disabled>Seleziona un indirizzo</option>
+                                    </c:otherwise>
+                                </c:choose>
+                                <c:forEach items="${indirizzi}" var="ind">
+                                    <c:choose>
+                                        <c:when test="${indirizzoSpedizioneIsNumeric and indirizzoSpedizioneVal == ind.idIndirizzo}">
+                                            <option value="${ind.idIndirizzo}" selected>
+                                                ${ind.via}, ${ind.cap} ${ind.citta} (${ind.provincia}) - ${ind.paese}
+                                            </option>
+                                        </c:when>
                                                 <c:otherwise>
                                                     <option value="${ind.idIndirizzo}">
                                                         ${ind.via}, ${ind.cap} ${ind.citta} (${ind.provincia}) - ${ind.paese}
                                                     </option>
                                                 </c:otherwise>
                                             </c:choose>
-                                        </c:forEach>
-                                        <c:choose>
-                                            <c:when test="${indirizzoSpedizione == 'new'}">
-                                                <option value="new" selected>Aggiungi nuovo indirizzo</option>
-                                            </c:when>
+                                </c:forEach>
+                                <c:choose>
+                                    <c:when test="${not empty indirizzoSpedizioneVal and not indirizzoSpedizioneIsNumeric}">
+                                        <option value="new" selected>Aggiungi nuovo indirizzo</option>
+                                    </c:when>
                                             <c:otherwise>
                                                 <option value="new">Aggiungi nuovo indirizzo</option>
                                             </c:otherwise>
@@ -168,7 +173,7 @@
                                         <div class="order-item-title">${articolo.libro.titolo}</div>
                                         <div class="order-item-meta">Quantita: ${articolo.quantita}</div>
                                         <div class="order-item-price">
-                                            EUR <fmt:formatNumber value="${articolo.libro.prezzo * articolo.quantita}"
+                                            EUR <fmt:formatNumber value="${articolo.totale}"
                                                        minFractionDigits="2" maxFractionDigits="2"/>
                                         </div>
                                     </div>

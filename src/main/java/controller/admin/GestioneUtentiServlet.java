@@ -7,7 +7,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import model.bean.Utente;
-import model.dao.UtenteDAO;
+import service.ServiceFactory;
+import service.account.AdminUserService;
 import utils.HashUtil;
 
 import java.io.IOException;
@@ -15,6 +16,8 @@ import java.util.List;
 
 @WebServlet("/admin/utenti")
 public class GestioneUtentiServlet extends HttpServlet {
+    private final AdminUserService adminUserService = ServiceFactory.adminUserService();
+
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         HttpSession session = req.getSession(false);
@@ -35,8 +38,7 @@ public class GestioneUtentiServlet extends HttpServlet {
             return;
         }
 
-        UtenteDAO utenteDAO = new UtenteDAO();
-        List<Utente> listaUtenti = utenteDAO.trovaTuttiUtenti();
+        List<Utente> listaUtenti = adminUserService.listAll();
         if (listaUtenti == null) {
             System.err.println("GestioneUtentiServlet: Errore critico - la lista utenti è null");
             req.setAttribute("errore", "Errore nel recupero degli utenti");
@@ -63,8 +65,7 @@ public class GestioneUtentiServlet extends HttpServlet {
 
             try {
                 int idUtente = Integer.parseInt(idParam);
-                UtenteDAO utenteDAO = new UtenteDAO();
-                Utente utente = utenteDAO.trovaUtentePerId(idUtente);
+                Utente utente = adminUserService.getById(idUtente);
 
                 if (utente == null) {
                     response.sendError(HttpServletResponse.SC_NOT_FOUND, "Utente non trovato");
@@ -102,7 +103,7 @@ public class GestioneUtentiServlet extends HttpServlet {
                 }
 
                 utente.setRuolo("AMMINISTRATORE".equals(ruolo) ? "admin" : "registrato");
-                utenteDAO.aggiornaUtente(utente);
+                adminUserService.update(utente);
                 response.sendRedirect(request.getContextPath() + "/admin/utenti?success=Utente modificato con successo");
             } catch (NumberFormatException e) {
                 response.sendError(HttpServletResponse.SC_BAD_REQUEST, "ID utente non valido");
@@ -131,8 +132,7 @@ public class GestioneUtentiServlet extends HttpServlet {
             nuovoUtente.setPasswordCifrata(HashUtil.sha1(password.trim()));
             nuovoUtente.setRuolo("AMMINISTRATORE".equals(ruolo) ? "admin" : "registrato");
 
-            UtenteDAO utenteDAO = new UtenteDAO();
-            boolean creato = utenteDAO.inserisciUtente(nuovoUtente);
+            boolean creato = adminUserService.create(nuovoUtente);
 
             if (creato) {
                 response.sendRedirect(request.getContextPath() +

@@ -6,6 +6,10 @@ public interface AdminCatalogService {
 
     Libro getBookById(int idLibro);
 
+    void registerObserver(CatalogObserver observer);
+
+    void unregisterObserver(CatalogObserver observer);
+
     /**
      * Inserisce un nuovo libro nel catalogo.
      */

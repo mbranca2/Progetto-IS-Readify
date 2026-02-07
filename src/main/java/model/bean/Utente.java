@@ -8,6 +8,7 @@ public class Utente {
     private String cognome;
     private String ruolo;
     private String telefono;
+    private java.sql.Timestamp dataRegistrazione;
 
     public Utente() {
     }
@@ -77,6 +78,14 @@ public class Utente {
 
     public void setTelefono(String telefono) {
         this.telefono = telefono;
+    }
+
+    public java.sql.Timestamp getDataRegistrazione() {
+        return dataRegistrazione;
+    }
+
+    public void setDataRegistrazione(java.sql.Timestamp dataRegistrazione) {
+        this.dataRegistrazione = dataRegistrazione;
     }
 
     public boolean isAdmin() {

@@ -18,36 +18,21 @@ public class LibroDAO {
             conn = DBManager.getConnection();
             conn.setAutoCommit(false);
 
-            try (PreparedStatement stmt = conn.prepareStatement(query, Statement.RETURN_GENERATED_KEYS)) {
-                stmt.setString(1, libro.getTitolo());
-                stmt.setString(2, libro.getAutore());
-                stmt.setBigDecimal(3, libro.getPrezzo());
-                stmt.setString(4, libro.getIsbn());
-                stmt.setString(5, libro.getDescrizione());
-                stmt.setInt(6, libro.getDisponibilita());
-                stmt.setString(7, libro.getCopertina());
-
-                int righeInserite = stmt.executeUpdate();
-                if (righeInserite > 0) {
-                    try (ResultSet rs = stmt.getGeneratedKeys()) {
-                        if (rs.next()) {
-                            libro.setIdLibro(rs.getInt(1));
-                            inserisciCategorieLibro(conn, libro.getIdLibro(), libro.getCategorie());
-                        }
-                    }
-                    conn.commit();
-                    return true;
-                }
-
+            boolean ok = inserisciLibro(conn, libro);
+            if (!ok) {
                 conn.rollback();
                 return false;
-
-            } catch (SQLException e) {
-                conn.rollback();
-                throw e;
             }
 
+            conn.commit();
+            return true;
+
         } catch (SQLException e) {
+            if (conn != null) {
+                try {
+                    conn.rollback();
+                } catch (SQLException ignored) {}
+            }
             e.printStackTrace();
             return false;
 
@@ -60,6 +45,33 @@ public class LibroDAO {
                     e.printStackTrace();
                 }
             }
+        }
+    }
+
+    public boolean inserisciLibro(Connection conn, Libro libro) throws SQLException {
+        String query = "INSERT INTO Libro (titolo, autore, prezzo, isbn, descrizione, disponibilita, copertina) " +
+                "VALUES (?, ?, ?, ?, ?, ?, ?)";
+
+        try (PreparedStatement stmt = conn.prepareStatement(query, Statement.RETURN_GENERATED_KEYS)) {
+            stmt.setString(1, libro.getTitolo());
+            stmt.setString(2, libro.getAutore());
+            stmt.setBigDecimal(3, libro.getPrezzo());
+            stmt.setString(4, libro.getIsbn());
+            stmt.setString(5, libro.getDescrizione());
+            stmt.setInt(6, libro.getDisponibilita());
+            stmt.setString(7, libro.getCopertina());
+
+            int righeInserite = stmt.executeUpdate();
+            if (righeInserite > 0) {
+                try (ResultSet rs = stmt.getGeneratedKeys()) {
+                    if (rs.next()) {
+                        libro.setIdLibro(rs.getInt(1));
+                        inserisciCategorieLibro(conn, libro.getIdLibro(), libro.getCategorie());
+                    }
+                }
+                return true;
+            }
+            return false;
         }
     }
 

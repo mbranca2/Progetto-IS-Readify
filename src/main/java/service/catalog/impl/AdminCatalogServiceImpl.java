@@ -24,8 +24,18 @@ public class AdminCatalogServiceImpl implements AdminCatalogService {
         this.libroDAO = Objects.requireNonNull(libroDAO);
     }
 
+    @Override
     public void registerObserver(CatalogObserver observer) {
-        if (observer != null) observers.add(observer);
+        if (observer != null && !observers.contains(observer)) {
+            observers.add(observer);
+        }
+    }
+
+    @Override
+    public void unregisterObserver(CatalogObserver observer) {
+        if (observer != null) {
+            observers.remove(observer);
+        }
     }
 
     @Override
@@ -42,7 +52,41 @@ public class AdminCatalogServiceImpl implements AdminCatalogService {
         if (newBook.getIsbn() == null || newBook.getIsbn().trim().isEmpty()) return false;
         if (newBook.getDisponibilita() < 0) return false;
 
-        return libroDAO.inserisciLibro(newBook);
+        Connection conn = null;
+        try {
+            conn = DBManager.getConnection();
+            conn.setAutoCommit(false);
+
+            boolean ok = libroDAO.inserisciLibro(conn, newBook);
+            if (!ok) {
+                conn.rollback();
+                return false;
+            }
+
+            notifyObservers(conn, new CatalogEvent(
+                    CatalogEventType.BOOK_ADDED,
+                    newBook.getIdLibro(),
+                    null,
+                    newBook.getDisponibilita(),
+                    null,
+                    newBook.getPrezzo()
+            ));
+
+            conn.commit();
+            return true;
+
+        } catch (Exception e) {
+            try { if (conn != null) conn.rollback(); } catch (Exception ignored) {}
+            return false;
+
+        } finally {
+            try {
+                if (conn != null) {
+                    conn.setAutoCommit(true);
+                    conn.close();
+                }
+            } catch (Exception ignored) {}
+        }
     }
 
     @Override

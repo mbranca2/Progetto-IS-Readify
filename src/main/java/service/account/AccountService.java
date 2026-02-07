@@ -22,4 +22,6 @@ public interface AccountService {
     boolean deleteAddress(int idUtente, int idIndirizzo);
 
     boolean changePassword(int idUtente, String oldPassword, String newPassword);
+
+    boolean updateProfile(Utente utente);
 }

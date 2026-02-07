@@ -8,13 +8,14 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import model.bean.Indirizzo;
 import model.bean.Utente;
-import model.dao.IndirizzoDAO;
+import service.ServiceFactory;
+import service.account.AccountService;
 
 import java.io.IOException;
 
 @WebServlet("/gestione-indirizzo")
 public class GestioneIndirizzoServlet extends HttpServlet {
-    private final IndirizzoDAO indirizzoDAO = new IndirizzoDAO();
+    private final AccountService accountService = ServiceFactory.accountService();
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -58,9 +59,9 @@ public class GestioneIndirizzoServlet extends HttpServlet {
 
         boolean successo;
         if (indirizzo.getIdIndirizzo() == 0) {
-            successo = indirizzoDAO.inserisciIndirizzo(indirizzo);
+            successo = accountService.addAddress(utente.getIdUtente(), indirizzo);
         } else {
-            successo = indirizzoDAO.aggiornaIndirizzo(indirizzo);
+            successo = accountService.updateAddress(utente.getIdUtente(), indirizzo);
         }
 
         if (successo) {

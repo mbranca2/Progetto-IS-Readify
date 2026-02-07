@@ -72,7 +72,7 @@ public class AccountServiceImpl implements AccountService {
             utente.setNome(nome);
             utente.setCognome(cognome);
             utente.setTelefono(telefono);
-            utente.setRuolo("utente");
+            utente.setRuolo("registrato");
 
             boolean okUser = utenteDAO.inserisciUtente(conn, utente);
             if (!okUser || utente.getIdUtente() <= 0) {
@@ -167,6 +167,16 @@ public class AccountServiceImpl implements AccountService {
 
         try {
             return utenteDAO.changePassword(idUtente, oldPassword, newPassword.trim());
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    @Override
+    public boolean updateProfile(Utente utente) {
+        if (utente == null || utente.getIdUtente() <= 0) return false;
+        try {
+            return utenteDAO.aggiornaUtente(utente);
         } catch (Exception e) {
             return false;
         }
