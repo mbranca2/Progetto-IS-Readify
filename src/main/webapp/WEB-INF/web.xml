@@ -8,7 +8,7 @@
     </welcome-file-list>
     <filter>
         <filter-name>CarrelloFilter</filter-name>
-        <filter-class>filter.CarrelloFilter</filter-class>
+        <filter-class>presentation.filter.CarrelloFilter</filter-class>
     </filter>
     <filter-mapping>
         <filter-name>CarrelloFilter</filter-name>
