@@ -41,15 +41,15 @@
                     <div class="panel-block">
                         <div class="panel-title">Indirizzo di spedizione</div>
 
-                <c:set var="indirizzoSpedizioneVal" value="${not empty indirizzoSpedizione ? indirizzoSpedizione : param.indirizzoSpedizione}"/>
-                <c:set var="indirizzoSpedizioneIsNumeric" value="${not empty indirizzoSpedizioneVal and fn:matches(indirizzoSpedizioneVal, '^[0-9]+$')}" />
+                <c:set var="indirizzoSpedizioneParam" value="${param.indirizzoSpedizione}"/>
+                <c:set var="indirizzoSpedizioneAttr" value="${indirizzoSpedizione}"/>
                 <c:choose>
                     <c:when test="${not empty indirizzi}">
                         <div class="form-group">
                             <label for="indirizzoSpedizione" class="form-label">Seleziona un indirizzo</label>
                             <select id="indirizzoSpedizione" name="indirizzoSpedizione" class="form-select" required>
                                 <c:choose>
-                                    <c:when test="${empty indirizzoSpedizioneVal}">
+                                    <c:when test="${empty indirizzoSpedizioneParam and empty indirizzoSpedizioneAttr}">
                                         <option value="" disabled selected>Seleziona un indirizzo</option>
                                     </c:when>
                                     <c:otherwise>
@@ -57,21 +57,38 @@
                                     </c:otherwise>
                                 </c:choose>
                                 <c:forEach items="${indirizzi}" var="ind">
+                                    <c:set var="isSelected" value="false"/>
                                     <c:choose>
-                                        <c:when test="${indirizzoSpedizioneIsNumeric and indirizzoSpedizioneVal == ind.idIndirizzo}">
+                                        <c:when test="${not empty indirizzoSpedizioneParam}">
+                                            <c:if test="${indirizzoSpedizioneParam ne 'new'}">
+                                                <c:if test="${indirizzoSpedizioneParam == ind.idIndirizzo}">
+                                                    <c:set var="isSelected" value="true"/>
+                                                </c:if>
+                                            </c:if>
+                                        </c:when>
+                                        <c:otherwise>
+                                            <c:if test="${not empty indirizzoSpedizioneAttr}">
+                                                <c:if test="${indirizzoSpedizioneAttr == ind.idIndirizzo}">
+                                                    <c:set var="isSelected" value="true"/>
+                                                </c:if>
+                                            </c:if>
+                                        </c:otherwise>
+                                    </c:choose>
+                                    <c:choose>
+                                        <c:when test="${isSelected}">
                                             <option value="${ind.idIndirizzo}" selected>
                                                 ${ind.via}, ${ind.cap} ${ind.citta} (${ind.provincia}) - ${ind.paese}
                                             </option>
                                         </c:when>
-                                                <c:otherwise>
-                                                    <option value="${ind.idIndirizzo}">
-                                                        ${ind.via}, ${ind.cap} ${ind.citta} (${ind.provincia}) - ${ind.paese}
-                                                    </option>
-                                                </c:otherwise>
-                                            </c:choose>
+                                        <c:otherwise>
+                                            <option value="${ind.idIndirizzo}">
+                                                ${ind.via}, ${ind.cap} ${ind.citta} (${ind.provincia}) - ${ind.paese}
+                                            </option>
+                                        </c:otherwise>
+                                    </c:choose>
                                 </c:forEach>
                                 <c:choose>
-                                    <c:when test="${not empty indirizzoSpedizioneVal and not indirizzoSpedizioneIsNumeric}">
+                                    <c:when test="${not empty indirizzoSpedizioneParam and indirizzoSpedizioneParam eq 'new'}">
                                         <option value="new" selected>Aggiungi nuovo indirizzo</option>
                                     </c:when>
                                             <c:otherwise>

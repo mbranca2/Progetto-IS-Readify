@@ -40,12 +40,22 @@
     border-radius: 10px;
     padding: 1.25rem;
     margin-bottom: 1.5rem;
+    box-shadow: 0 8px 18px rgba(15, 23, 42, 0.06);
+}
+
+.search-form {
+    max-width: none;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
 }
 
 .search-form .form-grid {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
     gap: 1rem;
+    align-items: end;
 }
 
 .search-form .form-group label {
@@ -54,6 +64,16 @@
     margin-bottom: 0.35rem;
     color: #4a5568;
     font-weight: 600;
+}
+
+.search-form .form-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.search-form .form-group button {
+    width: 100%;
+    margin-top: auto;
 }
 
 .search-form input[type="text"],
@@ -68,32 +88,182 @@
 
 .table-container {
     background: #fff;
-    border: 1px solid #e2e8f0;
     border-radius: 10px;
     overflow: hidden;
 }
 
-.table {
+.card {
+    background: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 12px 22px rgba(15, 23, 42, 0.08);
+    padding: 1.25rem;
+}
+
+.card-content {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+.book-table {
     width: 100%;
     border-collapse: collapse;
 }
 
-.table th, .table td {
-    padding: 0.85rem;
+.book-table th,
+.book-table td {
+    padding: 0.85rem 1rem;
     border-bottom: 1px solid #edf2f7;
+    vertical-align: middle;
+    text-align: left;
+}
+
+.book-table th {
+    background: #f7fafc;
+    color: #4a5568;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-size: 0.75rem;
+}
+
+.book-table tbody tr:hover {
+    background: #f8fafc;
+}
+
+.align-middle {
     vertical-align: middle;
 }
 
-.table th {
-    background: #f7fafc;
-    text-align: left;
-    color: #2d3748;
+.book-cover {
+    width: 70px;
+    height: 100px;
+    object-fit: cover;
+    border-radius: 6px;
+    box-shadow: 0 4px 10px rgba(15, 23, 42, 0.1);
+}
+
+.availability-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.6rem;
+    border-radius: 999px;
+    font-size: 0.75rem;
     font-weight: 700;
+    letter-spacing: 0.02em;
+}
+
+.availability-badge.available {
+    background: #e6f7ee;
+    color: #178a4a;
+}
+
+.availability-badge.unavailable {
+    background: #fdecec;
+    color: #c53030;
+}
+
+.actions {
+    text-align: right;
+    white-space: nowrap;
+}
+
+.action-buttons {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.btn-icon {
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    border-radius: 10px;
+    border: 1px solid #e2e8f0;
+    background: #f8fafc;
+    color: #4a5568;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 4px rgba(15, 23, 42, 0.08);
+    transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+}
+
+.btn-icon:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 12px rgba(15, 23, 42, 0.12);
+    background: #ffffff;
+    text-decoration: none;
+}
+
+.btn-icon.view {
+    color: #2563eb;
+}
+
+.btn-icon.edit {
+    color: #16a34a;
+}
+
+.btn-icon.delete {
+    color: #dc2626;
+}
+
+.no-results {
+    text-align: center;
+    padding: 2.5rem 1rem;
+    color: #718096;
+    font-weight: 600;
+}
+
+.pagination {
+    display: flex;
+    justify-content: center;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    gap: 0.4rem;
+}
+
+.page-item {
+    display: inline-flex;
+}
+
+.page-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 34px;
+    height: 34px;
+    padding: 0 0.6rem;
+    border-radius: 999px;
+    border: 1px solid #e2e8f0;
+    background: #ffffff;
+    color: #2a9d8f;
+    font-weight: 600;
+    transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+.page-link:hover {
+    background: #e6f7f5;
+    text-decoration: none;
+}
+
+.page-item.active .page-link {
+    background: #2a9d8f;
+    color: #ffffff;
+    border-color: #2a9d8f;
+}
+
+.page-item.disabled .page-link {
+    color: #a0aec0;
+    pointer-events: none;
+    background: #f8fafc;
+    border-color: #edf2f7;
 }
 
 @media (max-width: 1100px) {
     .search-form .form-grid {
-        grid-template-columns: repeat(2, 1fr);
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
     }
 }
 
@@ -106,5 +276,18 @@
         flex-direction: column;
         align-items: flex-start;
         gap: 0.75rem;
+    }
+
+    .book-cover {
+        width: 56px;
+        height: 80px;
+    }
+
+    .actions {
+        text-align: left;
+    }
+
+    .action-buttons {
+        justify-content: flex-start;
     }
 }

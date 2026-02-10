@@ -15,7 +15,7 @@
         <div class="confirmation-message">
             <i class="fas fa-check-circle"></i>
             <p>Grazie per il tuo acquisto! Il tuo ordine è stato ricevuto con successo.</p>
-            <p>Numero ordine: <strong>#${param.id}</strong></p>
+            <p>Numero ordine: <strong>#${not empty idOrdine ? idOrdine : param.id}</strong></p>
         </div>
 
         <div class="order-actions">

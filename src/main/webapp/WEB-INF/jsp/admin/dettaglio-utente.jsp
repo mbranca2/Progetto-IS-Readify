@@ -1,4 +1,4 @@
-<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+﻿<%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 <!DOCTYPE html>
@@ -6,13 +6,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Dettagli utente - Pannello di amministrazione Readify">
     <title>${utente.nome} ${utente.cognome} - Dettaglio Utente | Readify</title>
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/style.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/main.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/admin/user-detail.css">
     <meta name="description" content="Dettagli utente ${utente.nome} ${utente.cognome} - Pannello di amministrazione Readify">
 </head>
 <body>
+<jsp:include page="../header.jsp" />
+
+<main class="user-detail-page">
 <div class="user-detail-container">
     <div class="user-card">
         <!-- Header -->
@@ -75,25 +77,28 @@
         <!-- Azioni -->
         <div class="action-buttons">
             <a href="${pageContext.request.contextPath}/admin/utenti/modifica?id=${utente.idUtente}" 
-               class="btn btn-edit" id="editBtn"
+               class="btn btn-primary" id="editBtn"
                aria-label="Modifica utente">
                 Modifica
             </a>
             <button onclick="confermaEliminazione(${utente.idUtente})" 
-                    class="btn btn-delete" 
+                    class="btn btn-danger" 
                     id="deleteBtn"
                     type="button"
                     aria-label="Elimina utente">
                 Elimina
             </button>
             <a href="${pageContext.request.contextPath}/admin/utenti" 
-               class="btn btn-back"
+               class="btn btn-secondary"
                aria-label="Torna alla lista utenti">
                 Torna alla lista
             </a>
         </div>
     </div>
 </div>
+</main>
+
+<jsp:include page="../footer.jsp" />
 <script>
     document.addEventListener('DOMContentLoaded', function() {});
 
@@ -108,45 +113,34 @@
             deleteBtn.disabled = true;
             deleteBtn.innerHTML = '<span class="loading" aria-hidden="true"></span> Eliminazione in corso...';
 
-            const form = document.createElement('form');
-            form.method = 'POST';
-            form.action = '${pageContext.request.contextPath}/admin/utenti/elimina';
+            const actionUrl = '${pageContext.request.contextPath}/admin/utenti/elimina';
+            const body = new URLSearchParams();
+            body.set('id', id);
 
-            const input = document.createElement('input');
-            input.type = 'hidden';
-            input.name = 'id';
-            input.value = id;
-            form.appendChild(input);
-
-            form.addEventListener('submit', function(e) {
-                e.preventDefault();
-                
-                fetch(form.action, {
-                    method: 'POST',
-                    body: new URLSearchParams(new FormData(form)),
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded'
-                    }
-                })
-                .then(response => {
-                    if (response.ok) {
-                        window.location.href = '${pageContext.request.contextPath}/admin/utenti?success=Utente+eliminato+con+successo';
-                    } else {
-                        throw new Error('Errore durante l\'eliminazione');
-                    }
-                })
-                .catch(error => {
-                    console.error('Errore:', error);
-                    deleteBtn.innerHTML = originalText;
-                    deleteBtn.disabled = false;
-                    alert('Si è verificato un errore durante l\'eliminazione. Riprova più tardi.');
-                });
+            fetch(actionUrl, {
+                method: 'POST',
+                body: body.toString(),
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                }
+            })
+            .then(async response => {
+                if (response.ok) {
+                    window.location.href = '${pageContext.request.contextPath}/admin/utenti?success=Utente+eliminato+con+successo';
+                    return;
+                }
+                const message = await response.text();
+                throw new Error(message || 'Errore durante l\'eliminazione');
+            })
+            .catch(error => {
+                console.error('Errore:', error);
+                deleteBtn.innerHTML = originalText;
+                deleteBtn.disabled = false;
+                alert(error.message || 'Si Ã¨ verificato un errore durante l\'eliminazione. Riprova piÃ¹ tardi.');
             });
-
-            document.body.appendChild(form);
-            form.submit();
         }
     }
 </script>
 </body>
 </html>
+

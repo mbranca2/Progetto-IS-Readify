@@ -149,7 +149,7 @@
     </td>
     <td class="actions">
     <div class="action-buttons">
-    <a href="${pageContext.request.contextPath}/libro?id=${libro.idLibro}" class="btn btn-icon view" title="Visualizza" target="_blank">
+    <a href="${pageContext.request.contextPath}/dettaglio-libro?id=${libro.idLibro}" class="btn btn-icon view" title="Visualizza" target="_blank">
     <span class="icon icon-eye"></span>
     </a>
 

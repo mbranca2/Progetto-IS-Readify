@@ -141,7 +141,7 @@
                     <div id="orders" class="tab-panel">
                         <h3 class="section-title">I miei ordini</h3>
                         <c:choose>
-                            <c:when test="${not empty requestScope.ordini and not empty requestScope.ordini.ordini}">
+                            <c:when test="${not empty requestScope.ordini}">
                                 <table class="order-table">
                                     <thead>
                                     <tr>
@@ -153,7 +153,7 @@
                                     </tr>
                                     </thead>
                                     <tbody>
-                                    <c:forEach items="${requestScope.ordini.ordini}" var="ordine">
+                                    <c:forEach items="${requestScope.ordini}" var="ordine">
                                         <tr>
                                             <td>#${ordine.idOrdine}</td>
                                             <td><fmt:formatDate value="${ordine.dataOrdine}" pattern="dd/MM/yyyy"/></td>

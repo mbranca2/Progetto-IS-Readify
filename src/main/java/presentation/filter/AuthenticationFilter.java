@@ -19,6 +19,7 @@ import java.io.IOException;
         urlPatterns = {
                 "/checkout",
                 "/conferma-ordine",
+                "/dettaglio-ordine",
                 "/salva-ordine",
                 "/profilo",
                 "/profilo/*",

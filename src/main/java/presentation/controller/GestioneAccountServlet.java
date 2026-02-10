@@ -11,6 +11,7 @@ import business.model.Utente;
 import business.service.ServiceFactory;
 import business.service.account.AccountService;
 import business.service.address.AddressService;
+import business.service.order.OrderService;
 
 import java.io.IOException;
 import java.util.List;
@@ -19,6 +20,7 @@ import java.util.List;
 public class GestioneAccountServlet extends HttpServlet {
     private final AddressService addressService = ServiceFactory.addressService();
     private final AccountService accountService = ServiceFactory.accountService();
+    private final OrderService orderService = ServiceFactory.orderService();
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -28,14 +30,17 @@ public class GestioneAccountServlet extends HttpServlet {
             return;
         }
 
+        Utente utente = (Utente) session.getAttribute("utente");
+
         if (session.getAttribute("indirizzo") == null) {
-            Utente utente = (Utente) session.getAttribute("utente");
             List<Indirizzo> indirizzi = addressService.listByUser(utente.getIdUtente());
             if (!indirizzi.isEmpty()) {
                 session.setAttribute("indirizzo", indirizzi.get(0));
             }
         }
 
+        req.setAttribute("ordini", orderService.listByUser(utente.getIdUtente()));
+        req.setAttribute("ordini", orderService.listByUser(utente.getIdUtente()));
         req.getRequestDispatcher("/WEB-INF/jsp/gestioneAccount.jsp").forward(req, resp);
     }
 

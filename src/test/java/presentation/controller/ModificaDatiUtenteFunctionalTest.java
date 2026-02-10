@@ -8,7 +8,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import testutil.ReflectionTestUtils;
+import testUtil.ReflectionTestUtils;
 
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;

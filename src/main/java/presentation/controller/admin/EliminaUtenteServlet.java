@@ -8,6 +8,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import business.model.Utente;
 import business.service.ServiceFactory;
 import business.service.account.AdminUserService;
+import business.service.order.OrderService;
 
 import java.io.IOException;
 
@@ -15,6 +16,7 @@ import java.io.IOException;
 public class EliminaUtenteServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
     private final AdminUserService adminUserService = ServiceFactory.adminUserService();
+    private final OrderService orderService = ServiceFactory.orderService();
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
@@ -38,6 +40,12 @@ public class EliminaUtenteServlet extends HttpServlet {
                 return;
             }
 
+            if (!orderService.listByUser(idUtente).isEmpty()) {
+                inviaErrore(response, "Impossibile eliminare l'utente: ordini associati.",
+                        HttpServletResponse.SC_CONFLICT);
+                return;
+            }
+
             boolean eliminato = adminUserService.delete(idUtente);
 
             if (eliminato) {
@@ -56,6 +64,8 @@ public class EliminaUtenteServlet extends HttpServlet {
 
     private void inviaErrore(HttpServletResponse response, String messaggio, int statusCode)
             throws IOException {
-        response.sendError(statusCode, messaggio);
+        response.setStatus(statusCode);
+        response.setContentType("text/plain; charset=UTF-8");
+        response.getWriter().write(messaggio);
     }
 }
