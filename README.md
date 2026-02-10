@@ -39,7 +39,7 @@ Dipendenze unidirezionali: `Controller → Service → DAO → Database`
 ### Prerequisiti
 - IntelliJ IDEA  
 - Java Development Kit 21+ (JDK)  
-- Apache Tomcat 11+ 
+- Apache Tomcat 10+ 
 - MySQL  
 
 ### Avvio del progetto
