@@ -118,19 +118,17 @@ header h1 {
     letter-spacing: 0.4px;
     display: inline-flex;
     align-items: center;
-    padding: 8px 14px;
-    border-radius: 999px;
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.96), rgba(255, 255, 255, 0.82));
-    border: 1px solid rgba(15, 23, 42, 0.18);
-    box-shadow: 0 10px 20px rgba(5, 31, 20, 0.22), 0 0 0 2px rgba(255, 255, 255, 0.45);
-    transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+    padding: 0;
+    border-radius: 0;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    transition: transform 0.2s ease;
 }
 
 .logo-link:hover {
     text-decoration: none;
-    background: linear-gradient(135deg, rgba(255, 255, 255, 1), rgba(255, 255, 255, 0.88));
     transform: translateY(-1px) scale(1.01);
-    box-shadow: 0 12px 22px rgba(5, 31, 20, 0.26);
 }
 
 .logo-image {
@@ -138,7 +136,7 @@ header h1 {
     width: auto;
     display: block;
     object-fit: contain;
-    filter: drop-shadow(0 4px 10px rgba(3, 20, 12, 0.3));
+    filter: none;
 }
 
 header nav {
@@ -321,6 +319,38 @@ footer {
     border-top: 1px solid rgba(15, 23, 42, 0.08);
 }
 
+.footer-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1.5rem;
+    text-align: left;
+}
+
+.footer-contact h3 {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: 1rem;
+    letter-spacing: 0.3px;
+}
+
+.footer-contact p {
+    margin: 0.25rem 0 0;
+    font-size: 0.95rem;
+    color: var(--text-muted);
+}
+
+.footer-contact a {
+    color: var(--accent-strong);
+}
+
+.footer-copy {
+    margin: 0;
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    align-self: center;
+}
+
 body > footer {
     margin-top: auto;
 }
@@ -353,5 +383,15 @@ footer p {
         right: 0;
         left: 0;
         min-width: 100%;
+    }
+
+    .footer-content {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+
+    .footer-copy {
+        align-self: auto;
     }
 }
