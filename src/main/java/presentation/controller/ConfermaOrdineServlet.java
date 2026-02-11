@@ -18,11 +18,16 @@ import business.service.order.OrderServiceException;
 import presentation.util.ValidatoreForm;
 
 import java.io.IOException;
+import java.time.YearMonth;
 import java.util.Map;
 
 @WebServlet("/conferma-ordine")
 public class ConfermaOrdineServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
+
+    private static final String CARD_NUMBER_REGEX = "^\\d{16}$";
+    private static final String EXPIRY_REGEX = "^(0[1-9]|1[0-2])/\\d{2}$";
+    private static final String CVV_REGEX = "^\\d{3}$";
 
     private OrderService orderService;
     private AddressService addressService;
@@ -54,6 +59,11 @@ public class ConfermaOrdineServlet extends HttpServlet {
         if (idIndirizzoSpedizione == null) {
             return;
         }
+        if (idIndirizzoSpedizione <= 0) {
+            request.setAttribute("errore", "Indirizzo di spedizione non valido.");
+            forwardToPayment(request, response, utente, null);
+            return;
+        }
 
         String nomeTitolare = request.getParameter("cardName");
         String numeroCarta = request.getParameter("cardNumber");
@@ -68,12 +78,12 @@ public class ConfermaOrdineServlet extends HttpServlet {
 
         try {
             Ordine ordine = orderService.placeOrder(utente.getIdUtente(), idIndirizzoSpedizione, carrello);
+
             carrello.svuota();
             session.setAttribute("carrello", carrello);
 
             Indirizzo indirizzoOrdine = null;
-            if (idIndirizzoSpedizione != null && idIndirizzoSpedizione > 0
-                    && addressService.isOwnedByUser(idIndirizzoSpedizione, utente.getIdUtente())) {
+            if (addressService.isOwnedByUser(idIndirizzoSpedizione, utente.getIdUtente())) {
                 indirizzoOrdine = addressService.getById(idIndirizzoSpedizione);
             }
 
@@ -85,23 +95,38 @@ public class ConfermaOrdineServlet extends HttpServlet {
         } catch (OrderServiceException e) {
             request.setAttribute("errore", e.getMessage());
             forwardToPayment(request, response, utente, idIndirizzoSpedizione);
-
         } catch (Exception e) {
-            request.setAttribute("errore", "Si è verificato un errore durante l'elaborazione dell'ordine.");
+            request.setAttribute("errore", "Errore durante l'elaborazione dell'ordine.");
             forwardToPayment(request, response, utente, idIndirizzoSpedizione);
         }
     }
 
     private boolean validaDatiPagamento(String nomeTitolare, String numeroCarta, String scadenza, String cvv) {
-        return nomeTitolare != null && !nomeTitolare.trim().isEmpty()
-                && numeroCarta != null && numeroCarta.replace(" ", "").length() >= 13
-                && scadenza != null && scadenza.matches("\\d{2}/\\d{2}")
-                && cvv != null && cvv.matches("\\d{3,4}");
+        if (nomeTitolare == null || nomeTitolare.trim().isEmpty()) return false;
+
+        String numeroPulito = (numeroCarta == null) ? "" : numeroCarta.replaceAll("\\s+", "");
+        if (!numeroPulito.matches(CARD_NUMBER_REGEX)) return false;
+
+        if (scadenza == null || !scadenza.matches(EXPIRY_REGEX)) return false;
+        if (isScadenzaPassata(scadenza)) return false;
+
+        if (cvv == null || !cvv.matches(CVV_REGEX)) return false;
+
+        return true;
+    }
+
+    private boolean isScadenzaPassata(String scadenza) {
+        int mese = Integer.parseInt(scadenza.substring(0, 2));
+        int anno = Integer.parseInt(scadenza.substring(3, 5));
+        YearMonth exp = YearMonth.of(2000 + anno, mese);
+        return exp.isBefore(YearMonth.now());
     }
 
     private Integer resolveShippingAddress(HttpServletRequest request, HttpServletResponse response, Utente utente)
             throws ServletException, IOException {
+
         String indirizzoParam = request.getParameter("indirizzoSpedizione");
+
         if (indirizzoParam == null || indirizzoParam.isBlank() || "new".equalsIgnoreCase(indirizzoParam)) {
             String via = request.getParameter("via");
             String cap = request.getParameter("cap");
@@ -124,8 +149,8 @@ public class ConfermaOrdineServlet extends HttpServlet {
             indirizzo.setProvincia(ValidatoreForm.pulisciInput(provincia).toUpperCase());
             indirizzo.setPaese(ValidatoreForm.pulisciInput(paese));
 
-            if (!accountService.addAddress(utente.getIdUtente(), indirizzo)) {
-                request.setAttribute("errore", "Errore durante il salvataggio dell'indirizzo.");
+            if (!accountService.addAddress(utente.getIdUtente(), indirizzo) || indirizzo.getIdIndirizzo() <= 0) {
+                request.setAttribute("errore", "Salvataggio indirizzo non riuscito.");
                 forwardToPayment(request, response, utente, "new");
                 return null;
             }
@@ -142,7 +167,7 @@ public class ConfermaOrdineServlet extends HttpServlet {
             return null;
         }
 
-        if (!addressService.isOwnedByUser(idIndirizzoSpedizione, utente.getIdUtente())) {
+        if (idIndirizzoSpedizione <= 0 || !addressService.isOwnedByUser(idIndirizzoSpedizione, utente.getIdUtente())) {
             request.setAttribute("errore", "Indirizzo di spedizione non valido.");
             forwardToPayment(request, response, utente, idIndirizzoSpedizione);
             return null;
