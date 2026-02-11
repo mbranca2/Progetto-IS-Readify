@@ -56,8 +56,6 @@ public class AdminOrderServiceImpl implements AdminOrderService {
     public boolean updateStatus(int idOrdine, StatoOrdine nuovoStato) throws AdminOrderServiceException {
         if (idOrdine <= 0) throw new AdminOrderServiceException("ID ordine non valido.");
         if (nuovoStato == null) throw new AdminOrderServiceException("Stato ordine non valido.");
-
-        // opzionale: valida transizioni (se vuoi lo facciamo dopo).
         boolean ok = ordineDAO.aggiornaStatoOrdine(idOrdine, nuovoStato);
         if (!ok)
             throw new AdminOrderServiceException("Impossibile aggiornare lo stato (ordine non trovato o update fallito).");

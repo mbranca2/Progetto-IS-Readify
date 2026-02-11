@@ -122,7 +122,6 @@
 
 <script>
 
-    //validazione form
     if (document.querySelectorAll) {
         var forms = document.querySelectorAll('.needs-validation');
 

@@ -38,7 +38,6 @@ public class IndirizzoDAO {
         return false;
     }
 
-    // ✅ Overload per transazioni (stessa insert ma usa conn esterna)
     public boolean inserisciIndirizzo(Connection conn, Indirizzo indirizzo) throws SQLException {
         String query = "INSERT INTO Indirizzo (id_utente, via, cap, citta, provincia, paese) VALUES (?, ?, ?, ?, ?, ?)";
 

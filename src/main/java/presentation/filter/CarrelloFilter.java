@@ -16,7 +16,7 @@ public class CarrelloFilter implements Filter {
 
     private static final String SESSION_CART = "carrello";
     private static final String SESSION_USER = "utente";
-    private static final String SESSION_CART_USER_ID = "carrello.userId"; // marker per evitare reload DB
+    private static final String SESSION_CART_USER_ID = "carrello.userId";
     private static final String REQUEST_CART = "carrello";
 
     private CartFacade cartFacade;
@@ -70,8 +70,8 @@ public class CarrelloFilter implements Filter {
     }
 
     private String getPath(HttpServletRequest req) {
-        String uri = req.getRequestURI();          // es: /Readify/css/style.css
-        String ctx = req.getContextPath();         // es: /Readify
+        String uri = req.getRequestURI();
+        String ctx = req.getContextPath();
         return (ctx != null && !ctx.isEmpty() && uri.startsWith(ctx)) ? uri.substring(ctx.length()) : uri;
     }
 

@@ -42,7 +42,7 @@ public class AccountServiceImpl implements AccountService {
         if (data == null) throw new AccountServiceException("Dati di registrazione mancanti.");
 
         String email = safe(data.email());
-        String password = data.password(); // password può includere spazi
+        String password = data.password();
         String nome = safe(data.nome());
         String cognome = safe(data.cognome());
         String telefono = safe(data.telefono());

@@ -76,10 +76,8 @@ public class ReviewServiceImpl implements ReviewService {
         Recensione existing = recensioneDAO.trovaRecensionePerId(idRecensione);
         if (existing == null) return false;
 
-        // Solo proprietario
         if (existing.getIdUtente() != idUtente) return false;
 
-        // Coerenza RF: deve aver acquistato quel libro (stessa regola del create)
         if (!canUserReview(idUtente, existing.getIdLibro())) return false;
 
         if (commento == null) commento = "";
@@ -96,7 +94,6 @@ public class ReviewServiceImpl implements ReviewService {
         Recensione existing = recensioneDAO.trovaRecensionePerId(idRecensione);
         if (existing == null) return false;
 
-        // Solo proprietario
         if (existing.getIdUtente() != idUtente) return false;
 
         return recensioneDAO.eliminaRecensione(idRecensione, idUtente);

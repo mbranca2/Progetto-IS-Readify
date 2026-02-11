@@ -256,31 +256,25 @@
     document.addEventListener('DOMContentLoaded', function () {
         const tabButtons = document.querySelectorAll('.tab-button');
 
-        // Funzione per attivare un tab
         function activateTab(tabId) {
-            // Rimuovi la classe active da tutti i bottoni e dai pannelli
             document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
             document.querySelectorAll('.tab-panel').forEach(panel => panel.classList.remove('active'));
 
-            // Aggiungi la classe active al bottone cliccato
             const activeButton = document.querySelector(`[data-target="${tabId}"]`);
             if (activeButton) {
                 activeButton.classList.add('active');
             }
 
-            // Mostra il pannello corrispondente
             const activePanel = document.getElementById(tabId);
             if (activePanel) {
                 activePanel.classList.add('active');
             }
 
-            // Salva il tab attivo nell'URL
             const url = new URL(window.location.href);
             url.searchParams.set('tab', tabId);
             window.history.pushState({}, '', url);
         }
 
-        // Aggiungi gestore di eventi a ciascun pulsante
         tabButtons.forEach(button => {
             button.addEventListener('click', () => {
                 const target = button.getAttribute('data-target');
@@ -288,39 +282,33 @@
             });
         });
 
-        // Gestisci il popstate per il tasto indietro/avanti del browser
         window.addEventListener('popstate', function () {
             const urlParams = new URLSearchParams(window.location.search);
             const tab = urlParams.get('tab') || 'profile';
             activateTab(tab);
         });
 
-        // Attiva il tab corretto al caricamento della pagina
         const urlParams = new URLSearchParams(window.location.search);
         const activeTab = urlParams.get('tab') || 'profile';
         activateTab(activeTab);
     });
 
-    // Funzione per la validazione del cambio password
     function validatePasswordChange() {
         const form = document.getElementById('passwordChangeForm');
         const nuovaPassword = document.getElementById('nuovaPassword');
         const confermaPassword = document.getElementById('confermaPassword');
         const feedback = document.querySelectorAll('.invalid-feedback');
 
-        // Resetta i messaggi di errore
         feedback.forEach(el => el.textContent = '');
         nuovaPassword.classList.remove('is-invalid');
         confermaPassword.classList.remove('is-invalid');
 
-        // Verifica se le password coincidono
         if (nuovaPassword.value !== confermaPassword.value) {
             confermaPassword.nextElementSibling.textContent = 'Le password non coincidono';
             confermaPassword.classList.add('is-invalid');
             return false;
         }
 
-        // Verifica la complessità della password
         const passwordRegex = /^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z]).{8,}$/;
         if (!passwordRegex.test(nuovaPassword.value)) {
             nuovaPassword.nextElementSibling.textContent = 'La password deve contenere almeno 8 caratteri, una maiuscola e un numero';

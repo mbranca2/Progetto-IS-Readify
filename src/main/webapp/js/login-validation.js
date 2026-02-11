@@ -5,7 +5,6 @@ function validateLoginForm() {
     const password = document.getElementById('password').value;
     let isValid = true;
 
-    // Validazione email
     if (email === '') {
         showError('email', 'L\'email è obbligatoria');
         isValid = false;
@@ -14,7 +13,6 @@ function validateLoginForm() {
         isValid = false;
     }
 
-    // Validazione password
     if (password === '') {
         showError('password', 'La password è obbligatoria');
         isValid = false;

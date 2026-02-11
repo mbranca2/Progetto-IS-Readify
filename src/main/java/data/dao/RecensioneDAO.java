@@ -141,9 +141,6 @@ public class RecensioneDAO {
         }
     }
 
-    // ==========================
-    // ✅ ADMIN: list + delete
-    // ==========================
 
     public List<AdminReviewRow> trovaTutteRecensioniAdmin() {
         List<AdminReviewRow> rows = new ArrayList<>();

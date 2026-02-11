@@ -9,7 +9,6 @@ import org.junit.jupiter.api.Test;
 
 import static org.mockito.Mockito.*;
 
-// Classe per registrazione.
 class RegistrazioneControllerTest {
 
     @Test

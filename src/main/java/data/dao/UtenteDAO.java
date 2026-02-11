@@ -74,7 +74,6 @@ public class UtenteDAO {
         }
     }
 
-    // ✅ Overload per transazioni (stessa insert ma usa conn esterna)
     public boolean inserisciUtente(Connection conn, Utente utente) throws SQLException {
         String query = "INSERT INTO Utente (email, password_cifrata, nome, cognome, ruolo, telefono) VALUES (?, ?, ?, ?, ?, ?)";
         try (PreparedStatement stmt = conn.prepareStatement(query, Statement.RETURN_GENERATED_KEYS)) {
@@ -99,7 +98,6 @@ public class UtenteDAO {
         }
     }
 
-    // ✅ Check duplicato email (in conn transazionale)
     public boolean emailEsistente(Connection conn, String email) throws SQLException {
         String sql = "SELECT 1 FROM Utente WHERE email = ? LIMIT 1";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {

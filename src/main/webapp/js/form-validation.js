@@ -1,5 +1,4 @@
 function validateRegistrationForm() {
-    // predno i valori del form
     const form = document.getElementById('registrationForm');
     const nome = document.getElementById('nome').value.trim();
     const cognome = document.getElementById('cognome').value.trim();
@@ -12,7 +11,6 @@ function validateRegistrationForm() {
 
     let isValid = true;
 
-    // Validazione nome
     if (nome === '') {
         showError('nome', 'Il nome è obbligatorio');
         isValid = false;
@@ -21,7 +19,6 @@ function validateRegistrationForm() {
         isValid = false;
     }
 
-    // Validazione cognome
     if (cognome === '') {
         showError('cognome', 'Il cognome è obbligatorio');
         isValid = false;
@@ -30,7 +27,6 @@ function validateRegistrationForm() {
         isValid = false;
     }
 
-    // Validazione email
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (email === '') {
         showError('email', 'L\'email è obbligatoria');
@@ -40,7 +36,6 @@ function validateRegistrationForm() {
         isValid = false;
     }
 
-    // Validazione password
     if (password === '') {
         showError('password', 'La password è obbligatoria');
         isValid = false;
@@ -52,7 +47,6 @@ function validateRegistrationForm() {
         isValid = false;
     }
 
-    // Validazione conferma password
     if (confermaPassword === '') {
         showError('confermaPassword', 'Conferma la password');
         isValid = false;
@@ -61,7 +55,6 @@ function validateRegistrationForm() {
         isValid = false;
     }
 
-    // Validazione telefono (opzionale)
     if (telefono && !/^[0-9\-\+\(\)\s]{8,15}$/.test(telefono)) {
         showError('telefono', 'Inserisci un numero di telefono valido');
         isValid = false;
@@ -94,7 +87,6 @@ function showError(fieldId, message) {
     errorDiv.textContent = message;
     field.classList.add('is-invalid');
 
-    // Aggiungo un listener per rimuovere l'errore quando l'utente inizia a scrivere
     const clearError = () => {
         field.classList.remove('is-invalid');
         if (errorDiv && errorDiv.dataset.generated === 'true') {
@@ -181,13 +173,11 @@ function validatePasswordChange() {
     const nuovaPassword = document.getElementById('nuovaPassword').value;
     const confermaPassword = document.getElementById('confermaPassword').value;
 
-    // Validazione password attuale
     if (!vecchiaPassword) {
         showError('vecchiaPassword', 'La password attuale è obbligatoria');
         isValid = false;
     }
 
-    // Validazione nuova password
     if (!nuovaPassword) {
         showError('nuovaPassword', 'La nuova password è obbligatoria');
         isValid = false;
@@ -199,7 +189,6 @@ function validatePasswordChange() {
         isValid = false;
     }
 
-    // Validazione conferma password
     if (!confermaPassword) {
         showError('confermaPassword', 'La conferma password è obbligatoria');
         isValid = false;
