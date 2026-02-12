@@ -75,7 +75,7 @@ Le JSP sono collocate in `WEB-INF` e non sono direttamente accessibili.
 
 - Miglioramento del sistema di recensioni  
 - Gestione avanzata degli ordini per l’amministratore  
-- Estensione delle funzionalità di ricerca e filtraggio  
+- Integrazione di un reale sistema di pagamento esterno  
 
 ## Contributi
 
