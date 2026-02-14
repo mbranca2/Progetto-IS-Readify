@@ -33,7 +33,8 @@ public class IndirizzoDAO {
             }
 
         } catch (SQLException e) {
-            e.printStackTrace();
+            // TODO: Implementare logging appropriato
+            throw new RuntimeException("Errore durante l'operazione", e);
         }
         return false;
     }
@@ -77,7 +78,8 @@ public class IndirizzoDAO {
             }
 
         } catch (SQLException e) {
-            e.printStackTrace();
+            // TODO: Implementare logging appropriato
+            throw new RuntimeException("Errore durante l'operazione", e);
         }
         return null;
     }
@@ -97,7 +99,8 @@ public class IndirizzoDAO {
             }
 
         } catch (SQLException e) {
-            e.printStackTrace();
+            // TODO: Implementare logging appropriato
+            throw new RuntimeException("Errore durante l'operazione", e);
         }
 
         return indirizzi;

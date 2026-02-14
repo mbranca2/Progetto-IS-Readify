@@ -15,6 +15,8 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.List;
 
+import static presentation.util.ServletUtils.parseIntSafe;
+
 @WebServlet("/libri")
 public class ListaLibriServlet extends HttpServlet {
 
@@ -22,7 +24,8 @@ public class ListaLibriServlet extends HttpServlet {
     private final CategoryService categoryService = ServiceFactory.categoryService();
 
     @Override
-    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp)
+            throws ServletException, IOException {
 
         List<Categoria> categorie = categoryService.listAll();
 
@@ -40,7 +43,8 @@ public class ListaLibriServlet extends HttpServlet {
         int totale = 0;
         int totalePagine = 1;
 
-        boolean nessunFiltro = (titolo == null && autore == null && categoria == null && prezzoMin == null && prezzoMax == null);
+        boolean nessunFiltro = (titolo == null && autore == null && categoria == null
+                && prezzoMin == null && prezzoMax == null);
 
         if (nessunFiltro) {
             libri = catalogService.listAll();
@@ -66,14 +70,6 @@ public class ListaLibriServlet extends HttpServlet {
         req.setAttribute("prezzoMax", prezzoMax != null ? prezzoMax.toPlainString() : null);
 
         req.getRequestDispatcher("/WEB-INF/jsp/catalogo.jsp").forward(req, resp);
-    }
-
-    private int parseIntSafe(String s, int def) {
-        try {
-            return Integer.parseInt(s);
-        } catch (Exception e) {
-            return def;
-        }
     }
 
     private String trimToNull(String s) {

@@ -14,6 +14,8 @@ import jakarta.servlet.http.HttpSession;
 
 import java.io.IOException;
 
+import static presentation.util.ServletUtils.parseIntSafe;
+
 @WebServlet(name = "DettaglioLibroServlet", urlPatterns = {"/dettaglio-libro"})
 public class DettaglioLibroServlet extends HttpServlet {
 
@@ -58,13 +60,5 @@ public class DettaglioLibroServlet extends HttpServlet {
         }
         request.setAttribute("canReview", canReview);
         request.getRequestDispatcher("/WEB-INF/jsp/dettaglioLibro.jsp").forward(request, response);
-    }
-
-    private int parseIntSafe(String s) {
-        try {
-            return Integer.parseInt(s);
-        } catch (Exception e) {
-            return -1;
-        }
     }
 }

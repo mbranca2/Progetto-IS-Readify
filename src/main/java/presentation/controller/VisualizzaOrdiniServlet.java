@@ -35,6 +35,6 @@ public class VisualizzaOrdiniServlet extends HttpServlet {
         }
 
         request.setAttribute("ordini", orderService.listByUser(utente.getIdUtente()));
-        request.getRequestDispatcher("/WEB-INF/jsp/ordini.jsp").forward(request, response);
+        request.getRequestDispatcher("/WEB-INF/jsp/gestioneAccount.jsp").forward(request, response);
     }
 }

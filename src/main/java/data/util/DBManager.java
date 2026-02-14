@@ -37,7 +37,8 @@ public class DBManager {
             try {
                 conn.close();
             } catch (SQLException e) {
-                e.printStackTrace();
+                // TODO: Implementare logging appropriato
+                throw new RuntimeException("Errore durante l'operazione", e);
             }
         }
     }

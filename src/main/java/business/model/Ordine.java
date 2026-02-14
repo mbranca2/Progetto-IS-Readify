@@ -45,10 +45,6 @@ public class Ordine {
         this.idIndirizzo = idIndirizzo;
     }
 
-    public Date getDataOrdine() {
-        return dataOrdine;
-    }
-
     public void setDataOrdine(Date dataOrdine) {
         this.dataOrdine = dataOrdine != null ? new Date(dataOrdine.getTime()) : null;
     }
@@ -59,14 +55,6 @@ public class Ordine {
 
     public void setStato(StatoOrdine stato) {
         this.stato = stato;
-    }
-
-    public void setStato(String stato) {
-        try {
-            this.stato = StatoOrdine.valueOf(stato.toUpperCase());
-        } catch (IllegalArgumentException e) {
-            this.stato = StatoOrdine.IN_ELABORAZIONE;
-        }
     }
 
     public BigDecimal getTotale() {
@@ -83,14 +71,6 @@ public class Ordine {
 
     public void setDettagli(List<DettaglioOrdine> dettagli) {
         this.dettagli = dettagli;
-        calcolaTotale();
-    }
-
-    public void aggiungiDettaglio(DettaglioOrdine dettaglio) {
-        if (dettagli == null) {
-            dettagli = new ArrayList<>();
-        }
-        dettagli.add(dettaglio);
         calcolaTotale();
     }
 

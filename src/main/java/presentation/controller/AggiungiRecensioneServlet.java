@@ -13,56 +13,46 @@ import jakarta.servlet.http.HttpSession;
 
 import java.io.IOException;
 
-@WebServlet(name = "AggiungiRecensioneServlet", urlPatterns = {"/recensioni/aggiungi"})
+import static presentation.util.ServletUtils.parseIntSafe;
+
+@WebServlet("/aggiungi-recensione")
 public class AggiungiRecensioneServlet extends HttpServlet {
 
-    private ReviewService reviewService;
+    private ReviewService reviewService = ServiceFactory.reviewService();
 
     @Override
-    public void init() throws ServletException {
-        this.reviewService = ServiceFactory.reviewService();
-    }
-
-    @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        String contextPath = request.getContextPath();
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
         HttpSession session = request.getSession(false);
-        Utente utente = (session != null) ? (Utente) session.getAttribute("utente") : null;
-
-        if (utente == null) {
-            response.sendRedirect(contextPath + "/login");
+        if (session == null || session.getAttribute("utente") == null) {
+            response.sendRedirect(request.getContextPath() + "/login");
             return;
         }
 
+        Utente utente = (Utente) session.getAttribute("utente");
         int idLibro = parseIntSafe(request.getParameter("idLibro"));
         int voto = parseIntSafe(request.getParameter("voto"));
         String commento = request.getParameter("commento");
 
-        if (idLibro <= 0) {
-            response.sendRedirect(contextPath + "/home?error=invalid_book");
+        if (idLibro <= 0 || voto < 1 || voto > 5) {
+            session.setAttribute("error", "Dati non validi");
+            response.sendRedirect(request.getContextPath() + "/dettaglio-libro?id=" + idLibro);
             return;
         }
 
         Recensione recensione = new Recensione();
-        recensione.setIdLibro(idLibro);
         recensione.setIdUtente(utente.getIdUtente());
+        recensione.setIdLibro(idLibro);
         recensione.setVoto(voto);
-        recensione.setCommento(commento);
+        recensione.setCommento(commento != null ? commento.trim() : "");
 
-        boolean ok = reviewService.addReview(recensione);
-
-        if (ok) {
-            response.sendRedirect(contextPath + "/dettaglio-libro?id=" + idLibro + "&review=ok");
+        boolean success = reviewService.addReview(recensione);
+        if (success) {
+            session.setAttribute("message", "Recensione aggiunta con successo!");
         } else {
-            response.sendRedirect(contextPath + "/dettaglio-libro?id=" + idLibro + "&review=not_allowed");
+            session.setAttribute("error", "Errore nell'aggiunta della recensione");
         }
-    }
 
-    private int parseIntSafe(String s) {
-        try {
-            return Integer.parseInt(s);
-        } catch (Exception e) {
-            return -1;
-        }
+        response.sendRedirect(request.getContextPath() + "/dettaglio-libro?id=" + idLibro);
     }
 }

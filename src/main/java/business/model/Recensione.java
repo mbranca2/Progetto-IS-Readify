@@ -14,10 +14,6 @@ public class Recensione {
     public Recensione() {
     }
 
-    public int getIdRecensione() {
-        return idRecensione;
-    }
-
     public void setIdRecensione(int idRecensione) {
         this.idRecensione = idRecensione;
     }
@@ -54,16 +50,8 @@ public class Recensione {
         this.commento = commento;
     }
 
-    public Date getDataRecensione() {
-        return dataRecensione;
-    }
-
     public void setDataRecensione(Date dataRecensione) {
         this.dataRecensione = dataRecensione;
-    }
-
-    public String getNomeUtente() {
-        return nomeUtente;
     }
 
     public void setNomeUtente(String nomeUtente) {

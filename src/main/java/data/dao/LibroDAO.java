@@ -66,7 +66,8 @@ public class LibroDAO {
                 return libro;
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            // TODO: Implementare logging appropriato
+            throw new RuntimeException("Errore durante l'operazione", e);
         }
         return null;
     }
@@ -195,7 +196,8 @@ public class LibroDAO {
                 libri.add(mappaRisultatoALibro(rs));
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            // TODO: Implementare logging appropriato
+            throw new RuntimeException("Errore durante l'operazione", e);
         }
         return libri;
     }

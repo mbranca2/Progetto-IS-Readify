@@ -14,18 +14,24 @@ import jakarta.servlet.http.HttpSession;
 
 import java.io.IOException;
 
+import static presentation.util.ServletUtils.parseIntSafe;
+
 @WebServlet("/gestione-indirizzo")
 public class GestioneIndirizzoServlet extends HttpServlet {
+
     private final AccountService accountService = ServiceFactory.accountService();
     private final AddressService addressService = ServiceFactory.addressService();
 
     @Override
-    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp)
+            throws ServletException, IOException {
         resp.sendRedirect(req.getContextPath() + "/profilo?tab=address");
     }
 
     @Override
-    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp)
+            throws ServletException, IOException {
+
         HttpSession session = req.getSession(false);
         if (session == null || session.getAttribute("utente") == null) {
             resp.sendRedirect(req.getContextPath() + "/login");
@@ -34,6 +40,7 @@ public class GestioneIndirizzoServlet extends HttpServlet {
 
         Utente utente = (Utente) session.getAttribute("utente");
         String azione = req.getParameter("azione");
+
         if ("seleziona".equalsIgnoreCase(azione)) {
             handleSelect(req, resp, session, utente);
             return;
@@ -54,6 +61,7 @@ public class GestioneIndirizzoServlet extends HttpServlet {
         String citta = req.getParameter("citta");
         String provincia = req.getParameter("provincia");
         String paese = req.getParameter("paese");
+
         if (via == null || via.trim().isEmpty() ||
                 cap == null || !cap.matches("\\d{5}") ||
                 citta == null || citta.trim().isEmpty() ||
@@ -66,6 +74,7 @@ public class GestioneIndirizzoServlet extends HttpServlet {
 
         String idParam = req.getParameter("idIndirizzo");
         int idIndirizzo = parseIntSafe(idParam);
+
         Indirizzo indirizzo = new Indirizzo();
         if (idIndirizzo > 0) {
             indirizzo.setIdIndirizzo(idIndirizzo);
@@ -95,8 +104,8 @@ public class GestioneIndirizzoServlet extends HttpServlet {
         resp.sendRedirect(req.getContextPath() + "/profilo?tab=address");
     }
 
-    private void handleSelect(HttpServletRequest req, HttpServletResponse resp, HttpSession session, Utente utente)
-            throws IOException {
+    private void handleSelect(HttpServletRequest req, HttpServletResponse resp,
+                              HttpSession session, Utente utente) throws IOException {
         int idIndirizzo = parseIntSafe(req.getParameter("idIndirizzo"));
         if (idIndirizzo <= 0 || !addressService.isOwnedByUser(idIndirizzo, utente.getIdUtente())) {
             session.setAttribute("flashError", "Indirizzo non valido");
@@ -116,8 +125,8 @@ public class GestioneIndirizzoServlet extends HttpServlet {
         resp.sendRedirect(req.getContextPath() + "/profilo?tab=address");
     }
 
-    private void handleDelete(HttpServletRequest req, HttpServletResponse resp, HttpSession session, Utente utente)
-            throws IOException {
+    private void handleDelete(HttpServletRequest req, HttpServletResponse resp,
+                              HttpSession session, Utente utente) throws IOException {
         int idIndirizzo = parseIntSafe(req.getParameter("idIndirizzo"));
         if (idIndirizzo <= 0 || !addressService.isOwnedByUser(idIndirizzo, utente.getIdUtente())) {
             session.setAttribute("flashError", "Indirizzo non valido");
@@ -138,13 +147,5 @@ public class GestioneIndirizzoServlet extends HttpServlet {
         }
 
         resp.sendRedirect(req.getContextPath() + "/profilo?tab=address");
-    }
-
-    private int parseIntSafe(String value) {
-        try {
-            return Integer.parseInt(value);
-        } catch (Exception e) {
-            return -1;
-        }
     }
 }

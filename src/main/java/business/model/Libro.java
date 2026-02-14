@@ -110,10 +110,6 @@ public class Libro {
         }
     }
 
-    public void rimuoviCategoria(int idCategoria) {
-        this.categorie.remove(Integer.valueOf(idCategoria));
-    }
-
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

@@ -19,7 +19,8 @@ public class CategoriaDAO {
                 categorie.add(mappaRisultatoACategoria(rs));
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            // TODO: Implementare logging appropriato
+            throw new RuntimeException("Errore durante l'operazione", e);
         }
         return categorie;
     }

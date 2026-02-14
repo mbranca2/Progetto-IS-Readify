@@ -63,36 +63,16 @@ public class DettaglioOrdine {
         this.prezzoUnitario = prezzoUnitario;
     }
 
-    public String getTitoloLibro() {
-        return titoloLibro;
-    }
-
     public void setTitoloLibro(String titoloLibro) {
         this.titoloLibro = titoloLibro;
-    }
-
-    public BigDecimal getSubTotale() {
-        return prezzoUnitario.multiply(new BigDecimal(quantita));
-    }
-
-    public String getAutoreLibro() {
-        return autoreLibro;
     }
 
     public void setAutoreLibro(String autoreLibro) {
         this.autoreLibro = autoreLibro;
     }
 
-    public String getIsbnLibro() {
-        return isbnLibro;
-    }
-
     public void setIsbnLibro(String isbnLibro) {
         this.isbnLibro = isbnLibro;
-    }
-
-    public String getImmagineCopertina() {
-        return immagineCopertina;
     }
 
     public void setImmagineCopertina(String immagineCopertina) {

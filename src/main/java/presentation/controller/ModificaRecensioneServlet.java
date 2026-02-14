@@ -12,52 +12,43 @@ import jakarta.servlet.http.HttpSession;
 
 import java.io.IOException;
 
-@WebServlet("/recensioni/modifica")
+import static presentation.util.ServletUtils.parseIntSafe;
+
+@WebServlet("/modifica-recensione")
 public class ModificaRecensioneServlet extends HttpServlet {
 
-    private ReviewService reviewService;
+    private ReviewService reviewService = ServiceFactory.reviewService();
 
     @Override
-    public void init() throws ServletException {
-        this.reviewService = ServiceFactory.reviewService();
-    }
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
 
-    @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
-
-        String ctx = request.getContextPath();
         HttpSession session = request.getSession(false);
-        Utente utente = (session != null) ? (Utente) session.getAttribute("utente") : null;
-
-        if (utente == null) {
-            response.sendRedirect(ctx + "/login");
+        if (session == null || session.getAttribute("utente") == null) {
+            response.sendRedirect(request.getContextPath() + "/login");
             return;
         }
 
+        Utente utente = (Utente) session.getAttribute("utente");
         int idRecensione = parseIntSafe(request.getParameter("idRecensione"));
         int idLibro = parseIntSafe(request.getParameter("idLibro"));
         int voto = parseIntSafe(request.getParameter("voto"));
         String commento = request.getParameter("commento");
 
-        if (idLibro <= 0) {
-            response.sendRedirect(ctx + "/home?error=invalid_book");
+        if (voto < 1 || voto > 5) {
+            session.setAttribute("error", "Voto non valido");
+            response.sendRedirect(request.getContextPath() + "/dettaglio-libro?id=" + idLibro);
             return;
         }
 
-        boolean ok = reviewService.updateReview(idRecensione, utente.getIdUtente(), voto, commento);
+        boolean success = reviewService.updateReview(idRecensione, utente.getIdUtente(), voto, commento);
 
-        if (ok) {
-            response.sendRedirect(ctx + "/dettaglio-libro?id=" + idLibro + "&review_edit=ok");
+        if (success) {
+            session.setAttribute("message", "Recensione modificata con successo");
         } else {
-            response.sendRedirect(ctx + "/dettaglio-libro?id=" + idLibro + "&review_edit=ko");
+            session.setAttribute("error", "Errore nella modifica della recensione");
         }
-    }
 
-    private int parseIntSafe(String s) {
-        try {
-            return Integer.parseInt(s);
-        } catch (Exception e) {
-            return -1;
-        }
+        response.sendRedirect(request.getContextPath() + "/dettaglio-libro?id=" + idLibro);
     }
 }

@@ -16,6 +16,8 @@ import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
 import java.util.List;
 
+import static presentation.util.ServletUtils.parseIntSafe;
+
 @WebServlet("/dettaglio-ordine")
 public class DettaglioOrdineUtenteServlet extends HttpServlet {
 
@@ -29,7 +31,8 @@ public class DettaglioOrdineUtenteServlet extends HttpServlet {
     }
 
     @Override
-    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp)
+            throws ServletException, IOException {
         HttpSession session = req.getSession(false);
         Utente utente = (session != null) ? (Utente) session.getAttribute("utente") : null;
 
@@ -64,13 +67,5 @@ public class DettaglioOrdineUtenteServlet extends HttpServlet {
         req.setAttribute("ordine", ordine);
         req.setAttribute("indirizzoOrdine", indirizzo);
         req.getRequestDispatcher("/WEB-INF/jsp/dettaglio-ordine.jsp").forward(req, resp);
-    }
-
-    private int parseIntSafe(String value) {
-        try {
-            return Integer.parseInt(value);
-        } catch (Exception e) {
-            return -1;
-        }
     }
 }

@@ -12,50 +12,35 @@ import jakarta.servlet.http.HttpSession;
 
 import java.io.IOException;
 
-@WebServlet("/recensioni/elimina")
+import static presentation.util.ServletUtils.parseIntSafe;
+
+@WebServlet("/elimina-recensione")
 public class EliminaRecensioneServlet extends HttpServlet {
 
-    private ReviewService reviewService;
+    private ReviewService reviewService = ServiceFactory.reviewService();
 
     @Override
-    public void init() throws ServletException {
-        this.reviewService = ServiceFactory.reviewService();
-    }
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
 
-    @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
-
-        String ctx = request.getContextPath();
         HttpSession session = request.getSession(false);
-        Utente utente = (session != null) ? (Utente) session.getAttribute("utente") : null;
-
-        if (utente == null) {
-            response.sendRedirect(ctx + "/login");
+        if (session == null || session.getAttribute("utente") == null) {
+            response.sendRedirect(request.getContextPath() + "/login");
             return;
         }
 
+        Utente utente = (Utente) session.getAttribute("utente");
         int idRecensione = parseIntSafe(request.getParameter("idRecensione"));
         int idLibro = parseIntSafe(request.getParameter("idLibro"));
 
-        if (idLibro <= 0) {
-            response.sendRedirect(ctx + "/home?error=invalid_book");
-            return;
-        }
+        boolean success = reviewService.deleteReview(idRecensione, utente.getIdUtente());
 
-        boolean ok = reviewService.deleteReview(idRecensione, utente.getIdUtente());
-
-        if (ok) {
-            response.sendRedirect(ctx + "/dettaglio-libro?id=" + idLibro + "&review_del=ok");
+        if (success) {
+            session.setAttribute("message", "Recensione eliminata con successo");
         } else {
-            response.sendRedirect(ctx + "/dettaglio-libro?id=" + idLibro + "&review_del=ko");
+            session.setAttribute("error", "Errore nell'eliminazione della recensione");
         }
-    }
 
-    private int parseIntSafe(String s) {
-        try {
-            return Integer.parseInt(s);
-        } catch (Exception e) {
-            return -1;
-        }
+        response.sendRedirect(request.getContextPath() + "/dettaglio-libro?id=" + idLibro);
     }
 }

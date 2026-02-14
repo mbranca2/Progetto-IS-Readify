@@ -121,7 +121,8 @@ public class UtenteDAO {
             }
 
         } catch (SQLException e) {
-            e.printStackTrace();
+            // TODO: Implementare logging appropriato
+            throw new RuntimeException("Errore durante l'operazione", e);
         }
         return null;
     }
@@ -152,7 +153,8 @@ public class UtenteDAO {
             }
 
         } catch (SQLException e) {
-            e.printStackTrace();
+            // TODO: Implementare logging appropriato
+            throw new RuntimeException("Errore durante l'operazione", e);
         }
         return utenti;
     }
